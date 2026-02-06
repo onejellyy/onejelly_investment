@@ -40,7 +40,11 @@
     "extra": {
       "router": {
         "origin": false
+      },
+      "eas": {
+        "projectId": "b75407bc-81b7-486b-a0c2-90af27532578"
       }
-    }
+    },
+    "owner": "onejelly"
   }
 }

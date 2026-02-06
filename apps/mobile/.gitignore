@@ -1,0 +1,11 @@
+# Native folders (managed by EAS Build)
+android/
+ios/
+
+# Credentials
+credentials.json
+credentials/
+
+# Expo
+.expo/
+dist/
