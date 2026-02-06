@@ -15,7 +15,14 @@ try {
 }
 def expoAutolinking = expoPackagePath ? new File(expoPackagePath, "../scripts/autolinking.gradle") : null
 if (expoAutolinking == null || !expoAutolinking.exists()) {
-  expoAutolinking = new File(rootDir, "../../node_modules/expo/scripts/autolinking.gradle")
+  def candidates = [
+    new File(rootDir, "../../node_modules/expo/scripts/autolinking.gradle"),
+    new File(rootDir, "../../../node_modules/expo/scripts/autolinking.gradle")
+  ]
+  expoAutolinking = candidates.find { it.exists() }
+}
+if (expoAutolinking == null || !expoAutolinking.exists()) {
+  throw new GradleException("Expo autolinking script not found. Run pnpm install at repo root.")
 }
 apply from: expoAutolinking;
 useExpoModules()
@@ -27,7 +34,14 @@ try {
 }
 def rnCliAutolinking = rnCliPackagePath ? new File(rnCliPackagePath, "../native_modules.gradle") : null
 if (rnCliAutolinking == null || !rnCliAutolinking.exists()) {
-  rnCliAutolinking = new File(rootDir, "../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle")
+  def candidates = [
+    new File(rootDir, "../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"),
+    new File(rootDir, "../../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle")
+  ]
+  rnCliAutolinking = candidates.find { it.exists() }
+}
+if (rnCliAutolinking == null || !rnCliAutolinking.exists()) {
+  throw new GradleException("React Native CLI autolinking script not found. Run pnpm install at repo root.")
 }
 apply from: rnCliAutolinking;
 applyNativeModulesSettingsGradle(settings)
