@@ -57,6 +57,18 @@ if (rnCliAutolinking == null || !rnCliAutolinking.exists()) {
   rnCliAutolinking = candidates.find { it.exists() }
 }
 if (rnCliAutolinking == null || !rnCliAutolinking.exists()) {
+  def pnpmDir = new File(rootDir, "../../node_modules/.pnpm")
+  if (pnpmDir.exists()) {
+    def match = pnpmDir.listFiles()?.find { it.name.startsWith("@react-native-community+cli-platform-android@") }
+    if (match != null) {
+      def candidate = new File(match, "node_modules/@react-native-community/cli-platform-android/native_modules.gradle")
+      if (candidate.exists()) {
+        rnCliAutolinking = candidate
+      }
+    }
+  }
+}
+if (rnCliAutolinking == null || !rnCliAutolinking.exists()) {
   throw new GradleException("React Native CLI autolinking script not found. Run pnpm install in the repo root or apps/mobile.")
 }
 apply from: rnCliAutolinking;
