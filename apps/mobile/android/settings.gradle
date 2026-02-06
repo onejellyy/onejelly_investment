@@ -15,7 +15,7 @@ try {
 }
 def expoAutolinking = expoPackagePath ? new File(expoPackagePath, "../scripts/autolinking.gradle") : null
 if (expoAutolinking == null || !expoAutolinking.exists()) {
-  expoAutolinking = new File(rootDir, "../node_modules/expo/scripts/autolinking.gradle")
+  expoAutolinking = new File(rootDir, "../../node_modules/expo/scripts/autolinking.gradle")
 }
 apply from: expoAutolinking;
 useExpoModules()
@@ -27,7 +27,7 @@ try {
 }
 def rnCliAutolinking = rnCliPackagePath ? new File(rnCliPackagePath, "../native_modules.gradle") : null
 if (rnCliAutolinking == null || !rnCliAutolinking.exists()) {
-  rnCliAutolinking = new File(rootDir, "../node_modules/@react-native-community/cli-platform-android/native_modules.gradle")
+  rnCliAutolinking = new File(rootDir, "../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle")
 }
 apply from: rnCliAutolinking;
 applyNativeModulesSettingsGradle(settings)
