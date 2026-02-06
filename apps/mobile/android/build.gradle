@@ -39,8 +39,10 @@ allprojects {
     }
 }
 
-subprojects { project ->
+gradle.beforeProject { project ->
     project.plugins.withId("com.android.library") {
+        if (project.extensions.extraProperties.has("oj_single_variant_configured")) return
+        project.extensions.extraProperties.set("oj_single_variant_configured", true)
         project.android {
             compileSdk rootProject.ext.compileSdkVersion
             defaultConfig {
