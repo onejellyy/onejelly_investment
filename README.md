@@ -92,6 +92,71 @@ pnpm --filter mobile start
 
 - `EXPO_PUBLIC_API_URL` (예: `http://localhost:8787`)
 
+## Android Debug APK (Expo) - Handoff Notes (2026-02-06)
+
+### Summary
+- 목표: Expo 기반 Android debug APK 빌드
+- 현재 상태: 로컬 Windows에서 `gradlew assembleDebug` 진행 중이나, Expo/Gradle autolinking 및 `components.release` 관련 오류 반복
+- 모든 변경사항은 GitHub `main`에 푸시됨. 최신 커밋 확인 필요.
+
+### What Was Added/Changed
+- `apps/mobile/android` 폴더를 repo에 포함
+- `apps/mobile/android/settings.gradle`:
+  - Expo/RN autolinking 스크립트 경로 fallback 로직 추가
+  - pnpm `.pnpm` 경로에서 `@react-native-community/cli-platform-android` 탐색 로직 추가
+  - `:expo` 모듈에 대해 `singleVariant("release")`를 조기 적용 시도
+- `apps/mobile/android/build.gradle`:
+  - Android library 모듈에 `compileSdk/minSdk/targetSdk` 강제 적용
+  - publishing 관련 훅 여러 차례 조정
+- `apps/mobile/android/gradle.properties`:
+  - `android.disableAutomaticComponentCreation` 제거 (AGP 8 제거됨)
+- `.gitignore`:
+  - `.wrangler/` 무시 추가
+  - `android/` 무시 제거
+  - `*.keystore` 무시 추가
+
+### Known Build Errors
+1) **Expo modules**:  
+   ```
+   Could not get unknown property 'release' for SoftwareComponent container
+   ```
+   - `expo-modules-core`가 `components.release`를 기대하는데 생성되지 않음
+2) **Autolinking path** (Windows/OneDrive 경로 및 pnpm 구조 문제):  
+   - `expo/scripts/autolinking.gradle` 또는
+   - `@react-native-community/cli-platform-android/native_modules.gradle`
+   경로 탐색 실패
+
+### Current Workarounds in Code
+- `apps/mobile/android/settings.gradle`에서 다음 방식으로 탐색:
+  - `node --print require.resolve(...)` 시도
+  - `../node_modules`, `../../node_modules`, `../../../node_modules`, `../../../../node_modules` 후보
+  - pnpm `.pnpm` 내부 후보(12.3.0, 20.1.1)
+  - pnpm `.pnpm` 폴더 동적 탐색
+- `:expo` 모듈에 대해 `singleVariant("release")` 조기 적용 시도
+
+### Recommended Next Steps for Claude/Next Agent
+1. **Autolinking/paths 단순화**
+   - Windows 경로 이슈가 지속될 경우, 경로 탐색 로직을 최소화하고 실제 설치 위치만 지정
+2. **Expo/AGP 호환**
+   - Expo SDK 50 + RN 0.73 + AGP 8 조합에서 `components.release` 문제 해결 방식 검토
+   - 필요 시 Gradle 플러그인/Expo 모듈 버전 정합성 확인
+3. **빌드 재시도**
+   - `pnpm install` 후
+   - `apps/mobile/android/gradlew assembleDebug`
+
+### Repro Commands (Windows CMD)
+```
+cd C:\dev\onejelly_investment
+pnpm install
+cd apps\mobile\android
+gradlew assembleDebug
+```
+
+### Where to Look
+- `apps/mobile/android/settings.gradle`
+- `apps/mobile/android/build.gradle`
+- `apps/mobile/android/gradle.properties`
+
 ## API Endpoints (Workers)
 
 | Method | Path | Description |
