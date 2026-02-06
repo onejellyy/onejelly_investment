@@ -57,8 +57,12 @@ if (rnCliAutolinking == null || !rnCliAutolinking.exists()) {
   rnCliAutolinking = candidates.find { it.exists() }
 }
 if (rnCliAutolinking == null || !rnCliAutolinking.exists()) {
-  def pnpmDir = new File(rootDir, "../../node_modules/.pnpm")
-  if (pnpmDir.exists()) {
+  def pnpmDirs = [
+    new File(rootDir, "../../../node_modules/.pnpm"),
+    new File(rootDir, "../../node_modules/.pnpm")
+  ]
+  for (def pnpmDir : pnpmDirs) {
+    if (!pnpmDir.exists()) continue
     def matches = pnpmDir.listFiles()?.findAll { it.name.startsWith("@react-native-community+cli-platform-android@") } ?: []
     for (def match : matches) {
       def candidate = new File(match, "node_modules/@react-native-community/cli-platform-android/native_modules.gradle")
@@ -67,6 +71,7 @@ if (rnCliAutolinking == null || !rnCliAutolinking.exists()) {
         break
       }
     }
+    if (rnCliAutolinking != null && rnCliAutolinking.exists()) break
   }
 }
 if (rnCliAutolinking == null || !rnCliAutolinking.exists()) {
