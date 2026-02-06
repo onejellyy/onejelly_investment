@@ -1,0 +1,29 @@
+{
+  "name": "onejellyinvest",
+  "version": "1.0.0",
+  "private": true,
+  "description": "한국 주식 정보 제공 플랫폼 (중립적 정보, 투자 조언 아님)",
+  "scripts": {
+    "dev:api": "pnpm --filter @onejellyinvest/api dev",
+    "dev:web": "pnpm --filter web dev",
+    "dev:mobile": "pnpm --filter mobile start",
+    "build:api": "pnpm --filter @onejellyinvest/api build",
+    "build:web": "pnpm --filter web build",
+    "build:shared": "pnpm --filter shared build",
+    "deploy:api": "pnpm --filter @onejellyinvest/api deploy",
+    "deploy:api:prod": "pnpm --filter @onejellyinvest/api deploy:prod",
+    "db:migrate": "pnpm --filter @onejellyinvest/api db:migrate",
+    "db:migrate:prod": "pnpm --filter @onejellyinvest/api db:migrate:prod",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.1"
+}

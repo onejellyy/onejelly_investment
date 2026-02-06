@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 245, 245, 245;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 17, 17, 17;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+@layer components {
+  .label-badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
+  }
+
+  .label-badge-top {
+    @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200;
+  }
+
+  .label-badge-good {
+    @apply bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-200;
+  }
+
+  .label-badge-neutral {
+    @apply bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200;
+  }
+
+  .label-badge-low {
+    @apply bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200;
+  }
+
+  .label-badge-very-low {
+    @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200;
+  }
+
+  .card {
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 border border-gray-200 dark:border-gray-700;
+  }
+
+  .card:hover {
+    @apply shadow-lg;
+  }
+
+  .btn {
+    @apply px-4 py-2 rounded-md font-medium transition-colors;
+  }
+
+  .btn-primary {
+    @apply bg-blue-600 text-white hover:bg-blue-700;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200;
+  }
+
+  .tab {
+    @apply px-4 py-2 font-medium text-gray-600 dark:text-gray-400 border-b-2 border-transparent;
+  }
+
+  .tab-active {
+    @apply text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400;
+  }
+
+  .filter-chip {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm cursor-pointer transition-colors;
+  }
+
+  .filter-chip-inactive {
+    @apply bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300;
+  }
+
+  .filter-chip-active {
+    @apply bg-blue-600 text-white;
+  }
+}
