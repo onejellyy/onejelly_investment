@@ -39,8 +39,9 @@ allprojects {
     }
 }
 
-gradle.beforeProject { project ->
-    project.plugins.withId("com.android.library") {
+gradle.afterProject { project, state ->
+    if (state.failure != null) return
+    if (project.plugins.hasPlugin("com.android.library")) {
         if (project.extensions.extraProperties.has("oj_single_variant_configured")) return
         project.extensions.extraProperties.set("oj_single_variant_configured", true)
         project.android {
