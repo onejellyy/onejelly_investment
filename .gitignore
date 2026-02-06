@@ -51,7 +51,7 @@ coverage/
 *.key
 *.mobileprovision
 *.orig.*
-android/
+*.keystore
 ios/
 web-build/
 
