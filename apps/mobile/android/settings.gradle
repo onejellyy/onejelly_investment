@@ -10,38 +10,52 @@ dependencyResolutionManagement {
 
 def expoPackagePath = null
 try {
-  expoPackagePath = ["node", "--print", "require.resolve('expo/package.json')"].execute(null, rootDir).text.trim()
+  def resolveCommand = [
+    "node",
+    "--print",
+    "require.resolve('expo/package.json', { paths: [process.cwd(), require('path').resolve(process.cwd(), '..'), require('path').resolve(process.cwd(), '../..'), require('path').resolve(process.cwd(), '../../..')] })"
+  ]
+  expoPackagePath = resolveCommand.execute(null, rootDir).text.trim()
 } catch (Exception ignored) {
 }
 def expoAutolinking = expoPackagePath ? new File(expoPackagePath, "../scripts/autolinking.gradle") : null
 if (expoAutolinking == null || !expoAutolinking.exists()) {
   def candidates = [
+    new File(rootDir, "../node_modules/expo/scripts/autolinking.gradle"),
     new File(rootDir, "../../node_modules/expo/scripts/autolinking.gradle"),
-    new File(rootDir, "../../../node_modules/expo/scripts/autolinking.gradle")
+    new File(rootDir, "../../../node_modules/expo/scripts/autolinking.gradle"),
+    new File(rootDir, "../../../../node_modules/expo/scripts/autolinking.gradle")
   ]
   expoAutolinking = candidates.find { it.exists() }
 }
 if (expoAutolinking == null || !expoAutolinking.exists()) {
-  throw new GradleException("Expo autolinking script not found. Run pnpm install at repo root.")
+  throw new GradleException("Expo autolinking script not found. Run pnpm install in the repo root or apps/mobile.")
 }
 apply from: expoAutolinking;
 useExpoModules()
 
 def rnCliPackagePath = null
 try {
-  rnCliPackagePath = ["node", "--print", "require.resolve('@react-native-community/cli-platform-android/package.json', { paths: [require.resolve('react-native/package.json')] })"].execute(null, rootDir).text.trim()
+  def resolveCommand = [
+    "node",
+    "--print",
+    "require.resolve('@react-native-community/cli-platform-android/package.json', { paths: [process.cwd(), require('path').resolve(process.cwd(), '..'), require('path').resolve(process.cwd(), '../..'), require('path').resolve(process.cwd(), '../../..')] })"
+  ]
+  rnCliPackagePath = resolveCommand.execute(null, rootDir).text.trim()
 } catch (Exception ignored) {
 }
 def rnCliAutolinking = rnCliPackagePath ? new File(rnCliPackagePath, "../native_modules.gradle") : null
 if (rnCliAutolinking == null || !rnCliAutolinking.exists()) {
   def candidates = [
+    new File(rootDir, "../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"),
     new File(rootDir, "../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"),
-    new File(rootDir, "../../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle")
+    new File(rootDir, "../../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"),
+    new File(rootDir, "../../../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle")
   ]
   rnCliAutolinking = candidates.find { it.exists() }
 }
 if (rnCliAutolinking == null || !rnCliAutolinking.exists()) {
-  throw new GradleException("React Native CLI autolinking script not found. Run pnpm install at repo root.")
+  throw new GradleException("React Native CLI autolinking script not found. Run pnpm install in the repo root or apps/mobile.")
 }
 apply from: rnCliAutolinking;
 applyNativeModulesSettingsGradle(settings)
