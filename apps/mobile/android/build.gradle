@@ -42,6 +42,11 @@ allprojects {
 subprojects { project ->
     project.plugins.withId("com.android.library") {
         project.android {
+            compileSdk rootProject.ext.compileSdkVersion
+            defaultConfig {
+                minSdk rootProject.ext.minSdkVersion
+                targetSdk rootProject.ext.targetSdkVersion
+            }
             publishing {
                 singleVariant("release")
             }
@@ -52,6 +57,11 @@ subprojects { project ->
 gradle.beforeProject { project ->
     project.plugins.withId("com.android.library") {
         project.android {
+            compileSdk rootProject.ext.compileSdkVersion
+            defaultConfig {
+                minSdk rootProject.ext.minSdkVersion
+                targetSdk rootProject.ext.targetSdkVersion
+            }
             publishing {
                 singleVariant("release")
             }
