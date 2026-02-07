@@ -17,6 +17,7 @@ export interface Env {
   KRX_PUBLIC_KOSPI_URL?: string;
   KRX_PUBLIC_KOSDAQ_URL?: string;
   KRX_USE_MOCK?: string;
+  INTERNAL_API_SECRET?: string;
 }
 
 // ============================================

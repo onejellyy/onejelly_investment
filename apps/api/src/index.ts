@@ -17,6 +17,7 @@ import { disclosureRoutes } from './routes/disclosure';
 import { valuationRoutes } from './routes/valuation';
 import { newsRoutes } from './routes/news';
 import { healthRoutes } from './routes/health';
+import { internalRoutes } from './routes/internal';
 
 // 배치
 import { runDisclosureBatch } from './batch/disclosure-batch';
@@ -42,6 +43,7 @@ app.route('/api/disclosures', disclosureRoutes);
 app.route('/api/valuations', valuationRoutes);
 app.route('/api/news', newsRoutes);
 app.route('/api/health', healthRoutes);
+app.route('/api/internal', internalRoutes);
 
 // 루트 엔드포인트
 app.get('/', (c) => {
@@ -66,73 +68,138 @@ app.post('/api/batch/disclosure', async (c) => {
   return c.json({ success: true, result, timestamp: new Date().toISOString() });
 });
 
-// 테스트용: 샘플 공시 데이터 삽입
-app.post('/api/batch/disclosure/seed', async (c) => {
+// 테스트용: 샘플 데이터 삽입 (회사 + 공시 + 뉴스)
+app.post('/api/batch/seed', async (c) => {
   const db = c.env.DB;
+  const results = { corps: 0, disclosures: 0, news: 0, errors: [] as string[] };
 
+  // 1. 샘플 회사 데이터 (corp_master)
+  const sampleCorps = [
+    { corp_code: '00126380', stock_code: '005930', corp_name: '삼성전자', industry_code: '26', market: 'KOSPI' },
+    { corp_code: '00164779', stock_code: '000660', corp_name: 'SK하이닉스', industry_code: '26', market: 'KOSPI' },
+    { corp_code: '01515323', stock_code: '373220', corp_name: 'LG에너지솔루션', industry_code: '26', market: 'KOSPI' },
+    { corp_code: '00401731', stock_code: '005380', corp_name: '현대차', industry_code: '30', market: 'KOSPI' },
+    { corp_code: '00104856', stock_code: '035420', corp_name: 'NAVER', industry_code: '63', market: 'KOSPI' },
+    { corp_code: '00220478', stock_code: '035720', corp_name: '카카오', industry_code: '63', market: 'KOSPI' },
+    { corp_code: '00155276', stock_code: '051910', corp_name: 'LG화학', industry_code: '20', market: 'KOSPI' },
+    { corp_code: '00126186', stock_code: '006400', corp_name: '삼성SDI', industry_code: '26', market: 'KOSPI' },
+  ];
+
+  for (const corp of sampleCorps) {
+    try {
+      await db.prepare(
+        `INSERT OR REPLACE INTO corp_master (corp_code, stock_code, corp_name, industry_code, market, updated_at)
+         VALUES (?, ?, ?, ?, ?, datetime('now'))`
+      ).bind(corp.corp_code, corp.stock_code, corp.corp_name, corp.industry_code, corp.market).run();
+      results.corps++;
+    } catch (e: any) {
+      results.errors.push(`corp ${corp.corp_name}: ${e.message}`);
+    }
+  }
+
+  // 2. 샘플 공시 데이터
   const sampleDisclosures = [
     {
-      rcept_no: '20250109800175',
-      corp_code: '01515323',
-      stock_code: '373220',
-      corp_name: 'LG에너지솔루션',
-      disclosed_at: '2025-01-09',
-      category: '실적',
-      type: '잠정실적',
-      title: '[첨부추가]연결재무제표기준영업(잠정)실적(공정공시)',
-      key_json: JSON.stringify({ revenue: 6800000000000, op_profit: 150000000000 }),
-      source_url: 'https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20250109800175',
-      is_correction: 0,
-    },
-    {
-      rcept_no: '20250108000001',
-      corp_code: '00126380',
-      stock_code: '005930',
-      corp_name: '삼성전자',
-      disclosed_at: '2025-01-08',
-      category: '실적',
-      type: '잠정실적',
+      rcept_no: '20260206000001', corp_code: '00126380', stock_code: '005930', corp_name: '삼성전자',
+      disclosed_at: '2026-02-06', category: '실적', type: '잠정실적',
       title: '연결재무제표기준영업(잠정)실적(공정공시)',
       key_json: JSON.stringify({ revenue: 75000000000000, op_profit: 6500000000000 }),
-      source_url: 'https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20250108000001',
-      is_correction: 0,
+      source_url: 'https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260206000001',
     },
     {
-      rcept_no: '20250107000002',
-      corp_code: '00164779',
-      stock_code: '000660',
-      corp_name: 'SK하이닉스',
-      disclosed_at: '2025-01-07',
-      category: '수주계약',
-      type: '공급계약',
-      title: '단일판매·공급계약체결',
-      key_json: JSON.stringify({ contract_amount: 2500000000000, contract_ratio: 15.2 }),
-      source_url: 'https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20250107000002',
-      is_correction: 0,
+      rcept_no: '20260205000001', corp_code: '00164779', stock_code: '000660', corp_name: 'SK하이닉스',
+      disclosed_at: '2026-02-05', category: '실적', type: '잠정실적',
+      title: '연결재무제표기준영업(잠정)실적(공정공시)',
+      key_json: JSON.stringify({ revenue: 18500000000000, op_profit: 7200000000000 }),
+      source_url: 'https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260205000001',
+    },
+    {
+      rcept_no: '20260204000001', corp_code: '01515323', stock_code: '373220', corp_name: 'LG에너지솔루션',
+      disclosed_at: '2026-02-04', category: '수주계약', type: '공급계약',
+      title: '단일판매·공급계약체결(자율공시)',
+      key_json: JSON.stringify({ contract_amount: 5000000000000, contract_ratio: 18.5 }),
+      source_url: 'https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260204000001',
+    },
+    {
+      rcept_no: '20260203000001', corp_code: '00401731', stock_code: '005380', corp_name: '현대차',
+      disclosed_at: '2026-02-03', category: '주주가치', type: '배당',
+      title: '현금·현물배당결정',
+      key_json: JSON.stringify({ dividend_per_share: 8000, dividend_yield: 3.2 }),
+      source_url: 'https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260203000001',
+    },
+    {
+      rcept_no: '20260202000001', corp_code: '00104856', stock_code: '035420', corp_name: 'NAVER',
+      disclosed_at: '2026-02-02', category: '자본', type: '유상증자',
+      title: '유상증자결정',
+      key_json: JSON.stringify({ amount: 500000000000, share_count: 2500000 }),
+      source_url: 'https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260202000001',
     },
   ];
 
-  let inserted = 0;
   for (const d of sampleDisclosures) {
     try {
       await db.prepare(
         `INSERT OR IGNORE INTO disclosure
          (rcept_no, corp_code, stock_code, corp_name, disclosed_at, category, type, title, key_json, source_url, is_correction, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
-      ).bind(
-        d.rcept_no, d.corp_code, d.stock_code, d.corp_name, d.disclosed_at,
-        d.category, d.type, d.title, d.key_json, d.source_url, d.is_correction
-      ).run();
-      inserted++;
-    } catch (e) {
-      // ignore duplicates
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, datetime('now'))`
+      ).bind(d.rcept_no, d.corp_code, d.stock_code, d.corp_name, d.disclosed_at, d.category, d.type, d.title, d.key_json, d.source_url).run();
+      results.disclosures++;
+    } catch (e: any) {
+      results.errors.push(`disclosure ${d.rcept_no}: ${e.message}`);
+    }
+  }
+
+  // 3. 샘플 뉴스 데이터
+  const sampleNews = [
+    {
+      url: 'https://news.example.com/2026020601', stock_code: '005930', corp_name: '삼성전자',
+      title: '삼성전자, 4분기 실적 발표... 매출 75조원 기록',
+      one_liner: '삼성전자가 2025년 4분기 매출 75조원, 영업이익 6.5조원을 기록했다.',
+      source: '한국경제', published_at: '2026-02-06',
+    },
+    {
+      url: 'https://news.example.com/2026020501', stock_code: '000660', corp_name: 'SK하이닉스',
+      title: 'SK하이닉스, HBM 수요 급증으로 실적 호조',
+      one_liner: 'SK하이닉스가 HBM 수요 증가에 힘입어 4분기 영업이익 7.2조원을 달성했다.',
+      source: '매일경제', published_at: '2026-02-05',
+    },
+    {
+      url: 'https://news.example.com/2026020401', stock_code: '373220', corp_name: 'LG에너지솔루션',
+      title: 'LG에너지솔루션, 북미 완성차 업체와 5조원 규모 공급계약',
+      one_liner: 'LG에너지솔루션이 북미 완성차 업체와 5조원 규모의 배터리 공급계약을 체결했다.',
+      source: '조선비즈', published_at: '2026-02-04',
+    },
+    {
+      url: 'https://news.example.com/2026020301', stock_code: '005380', corp_name: '현대차',
+      title: '현대차, 주당 8000원 배당 결정',
+      one_liner: '현대차가 주당 8000원의 현금배당을 결정했으며 배당수익률은 3.2%이다.',
+      source: '서울경제', published_at: '2026-02-03',
+    },
+    {
+      url: 'https://news.example.com/2026020201', stock_code: '035420', corp_name: 'NAVER',
+      title: 'NAVER, AI 사업 확대 위해 5000억원 유상증자',
+      one_liner: 'NAVER가 AI 사업 투자를 위해 5000억원 규모의 유상증자를 결정했다.',
+      source: '한겨레', published_at: '2026-02-02',
+    },
+  ];
+
+  for (const n of sampleNews) {
+    try {
+      await db.prepare(
+        `INSERT OR IGNORE INTO news_article
+         (url, stock_code, corp_name, title, one_liner, source, published_at, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`
+      ).bind(n.url, n.stock_code, n.corp_name, n.title, n.one_liner, n.source, n.published_at).run();
+      results.news++;
+    } catch (e: any) {
+      results.errors.push(`news ${n.url}: ${e.message}`);
     }
   }
 
   return c.json({
     success: true,
-    inserted,
-    message: `${inserted}건의 샘플 공시 데이터 삽입 완료`,
+    results,
+    message: `회사 ${results.corps}건, 공시 ${results.disclosures}건, 뉴스 ${results.news}건 삽입 완료`,
     timestamp: new Date().toISOString()
   });
 });

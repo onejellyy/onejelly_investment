@@ -147,7 +147,7 @@ export class NewsEngine {
     const pubDateRegex = /<pubDate>(.*?)<\/pubDate>/;
 
     let match;
-    const oneHourAgo = Date.now() - 60 * 60 * 1000;
+    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000; // 24시간 이내 기사
 
     while ((match = itemRegex.exec(xml)) !== null) {
       const itemXml = match[1];
@@ -162,9 +162,9 @@ export class NewsEngine {
       const url = (linkMatch[1] || linkMatch[2] || '').trim();
       const pubDateStr = pubDateMatch?.[1] || '';
 
-      // 1시간 이내 기사만
+      // 24시간 이내 기사만
       const pubDate = new Date(pubDateStr);
-      if (pubDate.getTime() < oneHourAgo) continue;
+      if (pubDate.getTime() < oneDayAgo) continue;
 
       items.push({
         url,
