@@ -4,29 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import type { DisclosureCategory } from '@onejellyinvest/shared';
 import FeedCard from '@/components/FeedCard';
 import FilterBar from '@/components/FilterBar';
-
-interface FeedItem {
-  type: 'disclosure' | 'news';
-  id: string;
-  title: string;
-  source: string;
-  category: DisclosureCategory | null;
-  published_at: string;
-  summary: string | null;
-  url: string;
-  stock_code: string | null;
-  corp_code: string | null;
-}
-
-interface FeedResponse {
-  success: boolean;
-  data?: {
-    items: FeedItem[];
-    next_cursor: string | null;
-    has_more: boolean;
-  };
-  error?: string;
-}
+import { api, type FeedItem } from '@/lib/api';
 
 export default function FeedPage() {
   const [items, setItems] = useState<FeedItem[]>([]);
@@ -41,20 +19,13 @@ export default function FeedPage() {
       setLoading(true);
       setError(null);
 
-      const params = new URLSearchParams();
-      if (selectedType !== 'all') params.set('type', selectedType);
-      if (selectedCategory) params.set('category', selectedCategory);
-      if (cursor) params.set('cursor', cursor);
-      params.set('limit', '20');
+      const data = await api.getFeed({
+        type: selectedType,
+        category: selectedCategory || undefined,
+        cursor,
+        limit: 20,
+      });
 
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, '') || '';
-      const response = await fetch(`${apiBase}/api/feed?${params.toString()}`);
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch feed');
-      }
-
-      const data: FeedResponse = await response.json();
       if (!data.success || !data.data) {
         throw new Error(data.error || 'Failed to fetch feed');
       }

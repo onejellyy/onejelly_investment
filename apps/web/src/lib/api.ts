@@ -1,13 +1,16 @@
-import type { HealthResponse, BandLabel } from '@onejellyinvest/shared';
+import type { BandLabel, DisclosureCategory } from '@onejellyinvest/shared';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8787';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, '') || '';
+
+// ── Response Types ──
 
 export interface FeedItem {
   type: 'disclosure' | 'news';
   id: string;
   title: string;
   source: string;
-  category: string | null;
+  category: DisclosureCategory | null;
   published_at: string;
   summary: string | null;
   url: string;
@@ -129,22 +132,19 @@ export interface DisclosureQuery {
   offset?: number;
 }
 
+// ── API Client ──
+
 class ApiClient {
   private baseUrl: string;
 
   constructor(baseUrl: string) {
-    this.baseUrl = baseUrl.replace(/\/$/, '');
+    this.baseUrl = baseUrl;
   }
 
-  private async fetch<T>(path: string, options?: RequestInit): Promise<T> {
+  private async fetch<T>(path: string): Promise<T> {
     const url = `${this.baseUrl}${path}`;
-
     const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers,
-      },
+      headers: { 'Content-Type': 'application/json' },
     });
 
     if (!response.ok) {
@@ -156,27 +156,14 @@ class ApiClient {
 
   async getFeed(query: FeedQuery = {}): Promise<FeedResponse> {
     const params = new URLSearchParams();
+    if (query.type && query.type !== 'all') params.set('type', query.type);
+    if (query.category) params.set('category', query.category);
+    if (query.limit) params.set('limit', String(query.limit));
+    if (query.cursor) params.set('cursor', query.cursor);
+    if (query.stock_code) params.set('stock_code', query.stock_code);
 
-    if (query.type && query.type !== 'all') {
-      params.set('type', query.type);
-    }
-    if (query.category) {
-      params.set('category', query.category);
-    }
-    if (query.limit) {
-      params.set('limit', String(query.limit));
-    }
-    if (query.cursor) {
-      params.set('cursor', query.cursor);
-    }
-    if (query.stock_code) {
-      params.set('stock_code', query.stock_code);
-    }
-
-    const queryString = params.toString();
-    const path = queryString ? `/api/feed?${queryString}` : '/api/feed';
-
-    return this.fetch<FeedResponse>(path);
+    const qs = params.toString();
+    return this.fetch<FeedResponse>(qs ? `/api/feed?${qs}` : '/api/feed');
   }
 
   async getValuations(query: ValuationQuery = {}): Promise<ValuationListResponse> {
@@ -208,10 +195,6 @@ class ApiClient {
     return this.fetch<DisclosureListResponse>(
       qs ? `/api/disclosures?${qs}` : '/api/disclosures',
     );
-  }
-
-  async getHealth(): Promise<HealthResponse> {
-    return this.fetch<HealthResponse>('/api/health');
   }
 }
 

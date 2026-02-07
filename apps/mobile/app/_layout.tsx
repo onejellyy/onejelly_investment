@@ -31,6 +31,21 @@ export default function TabLayout() {
             tabBarLabel: '피드',
           }}
         />
+        <Tabs.Screen
+          name="valuations"
+          options={{
+            title: '밸류에이션',
+            headerTitle: '밸류에이션',
+            tabBarLabel: '밸류에이션',
+          }}
+        />
+        <Tabs.Screen
+          name="company/[corp_code]"
+          options={{
+            href: null,
+            headerTitle: '회사 상세',
+          }}
+        />
       </Tabs>
     </>
   );

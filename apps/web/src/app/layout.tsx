@@ -37,6 +37,12 @@ export default function RootLayout({
                   >
                     피드
                   </a>
+                  <a
+                    href="/valuations"
+                    className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                  >
+                    밸류에이션
+                  </a>
                 </nav>
               </div>
             </div>
