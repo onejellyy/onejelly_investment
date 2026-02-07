@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import type { BandLabel } from '@onejellyinvest/shared';
-import { bandLabelColors } from '../lib/theme';
+import { bandLabelColors, shadows } from '../lib/theme';
 
 interface LabelBadgeProps {
   label: BandLabel | null;
@@ -9,13 +9,13 @@ interface LabelBadgeProps {
 
 export function LabelBadge({ label }: LabelBadgeProps) {
   const currentLabel = label || '중립';
-  const colors = bandLabelColors[currentLabel];
+  const badgeColors = bandLabelColors[currentLabel];
   const text = currentLabel;
 
-  if (!colors) {
+  if (!badgeColors) {
     // Fallback for safety
     return (
-      <View style={[styles.badge, { backgroundColor: bandLabelColors['중립'].bg }]}>
+      <View style={[styles.badge, { backgroundColor: bandLabelColors['중립'].bg }, shadows.neuRaisedSm]}>
         <Text style={[styles.text, { color: bandLabelColors['중립'].text }]}>
           {text}
         </Text>
@@ -24,8 +24,8 @@ export function LabelBadge({ label }: LabelBadgeProps) {
   }
 
   return (
-    <View style={[styles.badge, { backgroundColor: colors.bg }]}>
-      <Text style={[styles.text, { color: colors.text }]}>
+    <View style={[styles.badge, { backgroundColor: badgeColors.bg }, shadows.neuRaisedSm]}>
+      <Text style={[styles.text, { color: badgeColors.text }]}>
         {text}
       </Text>
     </View>
@@ -34,13 +34,12 @@ export function LabelBadge({ label }: LabelBadgeProps) {
 
 const styles = StyleSheet.create({
   badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 12,
   },
   text: {
     fontSize: 12,
     fontWeight: '600',
   },
 });
-

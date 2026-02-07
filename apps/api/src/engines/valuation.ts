@@ -165,11 +165,47 @@ export class ValuationEngine {
         return { success: false, errors: ['No price data returned from KRX source'] };
       }
 
+      // corp_master에 종목 시딩 (가격 데이터에서 추출)
+      await this.seedCorpMasterFromPrices(prices);
+
       await this.savePriceData(prices);
       return { success: true, errors: [] };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       return { success: false, errors: [message] };
+    }
+  }
+
+  /**
+   * KRX 가격 데이터에서 corp_master 자동 시딩
+   * - stock_code + corp_name이 있는 종목만 upsert
+   * - 기존 데이터가 있으면 덮어쓰지 않음 (INSERT OR IGNORE)
+   */
+  private async seedCorpMasterFromPrices(prices: PriceDaily[]): Promise<void> {
+    const corpsToSeed = prices.filter((p) => p.corp_name && p.stock_code);
+    if (corpsToSeed.length === 0) return;
+
+    console.log(`[Valuation] Seeding corp_master with ${corpsToSeed.length} stocks from KRX data`);
+
+    const batchSize = 50;
+    for (let i = 0; i < corpsToSeed.length; i += batchSize) {
+      const batch = corpsToSeed.slice(i, i + batchSize);
+      const stmt = this.db.prepare(
+        `INSERT OR IGNORE INTO corp_master (corp_code, stock_code, corp_name, market, is_active, updated_at)
+         VALUES (?, ?, ?, ?, 1, datetime('now'))`
+      );
+
+      const stmts = batch.map((p) => {
+        // corp_code는 stock_code 기반으로 생성 (OpenDART 연동 전까지 임시)
+        const corpCode = `KRX_${p.stock_code}`;
+        return stmt.bind(corpCode, p.stock_code, p.corp_name!, p.market || 'KOSPI');
+      });
+
+      try {
+        await this.db.batch(stmts);
+      } catch (err) {
+        console.error(`[Valuation] corp_master seed batch error:`, err);
+      }
     }
   }
 

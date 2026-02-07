@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native'
 import { DISCLOSURE_CATEGORIES } from '@onejellyinvest/shared';
 import type { DisclosureCategory } from '@onejellyinvest/shared';
 import { FilingTypeChip } from './FilingTypeChip';
-import { colors } from '../lib/theme';
+import { colors, shadows } from '../lib/theme';
 import type { FeedItem } from '../lib/api';
 
 // The new FeedItem for mobile, mirroring the web version
@@ -68,15 +68,13 @@ export function FeedCard({ item }: FeedCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    borderRadius: 16,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+    ...shadows.glass,
   },
   header: {
     flexDirection: 'row',
@@ -134,11 +132,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: 'rgba(255, 255, 255, 0.3)',
   },
   dartLink: {
     fontSize: 13,
     color: colors.primary,
-    fontWeight: '500',
+    fontWeight: '600',
   },
 });

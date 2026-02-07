@@ -3,91 +3,203 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 245, 245, 245;
-  --background-end-rgb: 255, 255, 255;
+  --foreground-rgb: 51, 51, 51;
+  --background: #ECF0F3;
+  --surface: #FFFFFF;
+  --primary: #2A3F6D;
+  --accent: #4CAF50;
+  --secondary-orange: #FF9800;
+  --neu-light: #F9F9F9;
+  --neu-shadow: #D1D9E6;
+  --glass-bg: rgba(255, 255, 255, 0.25);
+  --glass-border: rgba(255, 255, 255, 0.3);
+  --glass-shadow: rgba(31, 38, 135, 0.15);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 17, 17, 17;
-    --background-end-rgb: 0, 0, 0;
+    --background: #1A1D2C;
+    --surface: #2C3141;
+    --primary: #5B7FBF;
+    --accent: #66BB6A;
+    --secondary-orange: #FFB74D;
+    --neu-light: #222639;
+    --neu-shadow: #12141F;
+    --glass-bg: rgba(44, 49, 65, 0.4);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-shadow: rgba(0, 0, 0, 0.3);
   }
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  background: var(--background);
 }
 
 @layer components {
+  /* ---- Label badges ---- */
   .label-badge {
-    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
+    box-shadow: 2px 2px 4px var(--neu-shadow), -2px -2px 4px var(--neu-light);
   }
 
   .label-badge-top {
-    @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200;
+    @apply bg-green-100 text-green-800 dark:bg-green-900/60 dark:text-green-200;
   }
 
   .label-badge-good {
-    @apply bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-200;
+    @apply bg-lime-100 text-lime-800 dark:bg-lime-900/60 dark:text-lime-200;
   }
 
   .label-badge-neutral {
-    @apply bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200;
+    @apply bg-gray-100 text-gray-800 dark:bg-gray-700/60 dark:text-gray-200;
   }
 
   .label-badge-low {
-    @apply bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200;
+    @apply bg-orange-100 text-orange-800 dark:bg-orange-900/60 dark:text-orange-200;
   }
 
   .label-badge-very-low {
-    @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200;
+    @apply bg-red-100 text-red-800 dark:bg-red-900/60 dark:text-red-200;
   }
 
+  /* ---- Glass card (primary card style) ---- */
   .card {
-    @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 border border-gray-200 dark:border-gray-700;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 8px 32px 0 var(--glass-shadow);
+    @apply rounded-xl p-4 transition-all duration-200;
   }
 
   .card:hover {
-    @apply shadow-lg;
+    box-shadow: 0 12px 40px 0 var(--glass-shadow);
+    transform: translateY(-1px);
   }
 
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 8px 32px 0 var(--glass-shadow);
+    @apply rounded-xl p-4;
+  }
+
+  /* ---- Neumorphism raised ---- */
+  .neu-raised {
+    @apply rounded-xl;
+    background: var(--background);
+    box-shadow: 6px 6px 12px var(--neu-shadow), -6px -6px 12px var(--neu-light);
+  }
+
+  /* ---- Neumorphism inset ---- */
+  .neu-inset {
+    @apply rounded-xl;
+    background: var(--background);
+    box-shadow: inset 4px 4px 8px var(--neu-shadow), inset -4px -4px 8px var(--neu-light);
+  }
+
+  /* ---- Buttons ---- */
   .btn {
-    @apply px-4 py-2 rounded-md font-medium transition-colors;
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
   }
 
   .btn-primary {
-    @apply bg-blue-600 text-white hover:bg-blue-700;
+    background: var(--glass-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--glass-border);
+    color: var(--primary);
+    @apply font-semibold;
+  }
+
+  .btn-primary:hover {
+    background: rgba(42, 63, 109, 0.15);
+    box-shadow: 0 4px 16px var(--glass-shadow);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .btn-primary {
+      color: #93B5E8;
+    }
+    .btn-primary:hover {
+      background: rgba(91, 127, 191, 0.2);
+    }
   }
 
   .btn-secondary {
-    @apply bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200;
+    background: var(--background);
+    box-shadow: 4px 4px 8px var(--neu-shadow), -4px -4px 8px var(--neu-light);
+    @apply text-gray-700 dark:text-gray-300;
   }
 
+  .btn-secondary:hover {
+    box-shadow: 2px 2px 4px var(--neu-shadow), -2px -2px 4px var(--neu-light);
+  }
+
+  .btn-secondary:active {
+    box-shadow: inset 2px 2px 4px var(--neu-shadow), inset -2px -2px 4px var(--neu-light);
+  }
+
+  /* ---- Tabs ---- */
   .tab {
     @apply px-4 py-2 font-medium text-gray-600 dark:text-gray-400 border-b-2 border-transparent;
   }
 
   .tab-active {
-    @apply text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400;
+    color: var(--primary);
+    border-color: var(--primary);
   }
 
+  /* ---- Filter chips ---- */
   .filter-chip {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-sm cursor-pointer transition-colors;
+    @apply inline-flex items-center px-3 py-1.5 rounded-full text-sm cursor-pointer transition-all duration-200 font-medium;
   }
 
   .filter-chip-inactive {
-    @apply bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300;
+    background: var(--background);
+    box-shadow: 3px 3px 6px var(--neu-shadow), -3px -3px 6px var(--neu-light);
+    @apply text-gray-600 dark:text-gray-300;
+  }
+
+  .filter-chip-inactive:hover {
+    box-shadow: 2px 2px 4px var(--neu-shadow), -2px -2px 4px var(--neu-light);
   }
 
   .filter-chip-active {
-    @apply bg-blue-600 text-white;
+    box-shadow: inset 3px 3px 6px var(--neu-shadow), inset -3px -3px 6px var(--neu-light);
+    color: var(--primary);
+    background: var(--background);
+    @apply font-semibold;
+  }
+
+  /* ---- Skeleton loader ---- */
+  .skeleton {
+    @apply rounded-lg animate-pulse;
+    background: linear-gradient(90deg, var(--neu-shadow) 25%, var(--neu-light) 50%, var(--neu-shadow) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  }
+
+  @keyframes skeleton-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* ---- Error banner ---- */
+  .error-banner {
+    background: rgba(255, 152, 0, 0.1);
+    border: 1px solid rgba(255, 152, 0, 0.3);
+    @apply p-4 rounded-xl mb-4 flex items-center gap-3;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .error-banner {
+      background: rgba(255, 183, 77, 0.1);
+      border-color: rgba(255, 183, 77, 0.2);
+    }
   }
 }

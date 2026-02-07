@@ -20,10 +20,10 @@ import type { Env, NewsArticle } from '../types';
 // ============================================
 export const TRUSTED_SOURCES = [
   { id: 'yonhap', name: '연합뉴스', rssUrl: 'https://www.yna.co.kr/rss/economy.xml' },
-  { id: 'hankyung', name: '한국경제', rssUrl: 'https://rss.hankyung.com/feed/stock.xml' },
-  { id: 'mk', name: '매일경제', rssUrl: 'https://www.mk.co.kr/rss/50100001/' },
-  { id: 'mt', name: '머니투데이', rssUrl: 'https://rss.mt.co.kr/mt_main_news.xml' },
-  { id: 'edaily', name: '이데일리', rssUrl: 'https://rss.edaily.co.kr/edaily_economy.xml' },
+  { id: 'hankyung', name: '한국경제', rssUrl: 'https://www.hankyung.com/feed/finance' },
+  { id: 'mk', name: '매일경제', rssUrl: 'https://www.mk.co.kr/rss/50200011/' },
+  { id: 'mt', name: '머니투데이', rssUrl: 'http://rss.mt.co.kr/mt_news.xml' },
+  { id: 'edaily', name: '이데일리', rssUrl: 'http://rss.edaily.co.kr/stock_news.xml' },
 ] as const;
 
 // ============================================
@@ -122,16 +122,29 @@ export class NewsEngine {
   private async fetchFromSource(
     source: (typeof TRUSTED_SOURCES)[number]
   ): Promise<{ url: string; title: string; published_at: string }[]> {
-    const response = await fetch(source.rssUrl, {
-      headers: { 'User-Agent': 'OneJellyInvest/1.0' },
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    try {
+      const response = await fetch(source.rssUrl, {
+        headers: { 'User-Agent': 'OneJellyInvest/1.0' },
+        signal: controller.signal,
+      });
 
-    if (!response.ok) {
-      throw new Error(`RSS fetch failed: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`RSS fetch failed: ${response.status}`);
+      }
+
+      const text = await response.text();
+
+      // RSS가 아닌 HTML이 반환된 경우 스킵
+      if (text.trimStart().startsWith('<!DOCTYPE') || text.trimStart().startsWith('<html')) {
+        throw new Error('RSS returned HTML instead of XML');
+      }
+
+      return this.parseRssFeed(text);
+    } finally {
+      clearTimeout(timeout);
     }
-
-    const xml = await response.text();
-    return this.parseRssFeed(xml);
   }
 
   /**
@@ -191,12 +204,15 @@ export class NewsEngine {
    * 기사 본문 크롤링
    */
   private async crawlContent(url: string): Promise<string | null> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
     try {
       const response = await fetch(url, {
         headers: {
           'User-Agent':
             'Mozilla/5.0 (compatible; OneJellyInvest/1.0; +https://onejellyinvest.com)',
         },
+        signal: controller.signal,
       });
 
       if (!response.ok) return null;
@@ -205,6 +221,8 @@ export class NewsEngine {
       return this.extractTextFromHtml(html);
     } catch {
       return null;
+    } finally {
+      clearTimeout(timeout);
     }
   }
 
@@ -247,6 +265,10 @@ export class NewsEngine {
     try {
       const response = await this.ai.run('@cf/meta/llama-3-8b-instruct', {
         messages: [
+          {
+            role: 'system',
+            content: '당신은 한국어 뉴스 요약 전문가입니다. 반드시 한국어로만 응답하세요. 영어로 응답하지 마세요.',
+          },
           {
             role: 'user',
             content: prompt,

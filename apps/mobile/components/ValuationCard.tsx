@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { getBandLabel } from '@onejellyinvest/shared';
 import { LabelBadge } from './LabelBadge';
-import { colors } from '../lib/theme';
+import { colors, shadows } from '../lib/theme';
 import type { ValuationView } from '../lib/api';
 
 interface ValuationCardProps {
@@ -79,15 +79,13 @@ export function ValuationCard({ item }: ValuationCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    borderRadius: 16,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+    ...shadows.glass,
   },
   header: {
     flexDirection: 'row',
@@ -130,14 +128,14 @@ const styles = StyleSheet.create({
   },
   metricValue: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
     color: colors.text,
   },
   footer: {
     marginTop: 12,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: 'rgba(255, 255, 255, 0.3)',
   },
   peerName: {
     fontSize: 12,

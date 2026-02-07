@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { colors } from '../lib/theme';
+import { colors, shadows } from '../lib/theme';
 
 interface FilterChipProps {
   label: string;
@@ -12,7 +12,7 @@ export function FilterChip({ label, active, onPress }: FilterChipProps) {
   return (
     <TouchableOpacity
       onPress={onPress}
-      style={[styles.chip, active && styles.chipActive]}
+      style={[styles.chip, active ? styles.chipActive : styles.chipInactive]}
     >
       <Text style={[styles.text, active && styles.textActive]}>{label}</Text>
     </TouchableOpacity>
@@ -21,22 +21,28 @@ export function FilterChip({ label, active, onPress }: FilterChipProps) {
 
 const styles = StyleSheet.create({
   chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
     marginRight: 8,
     marginBottom: 8,
   },
+  chipInactive: {
+    backgroundColor: colors.background,
+    ...shadows.neuRaisedSm,
+  },
   chipActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.neuShadow,
   },
   text: {
     fontSize: 13,
-    color: colors.text,
+    color: colors.textSecondary,
     fontWeight: '500',
   },
   textActive: {
-    color: '#FFFFFF',
+    color: colors.primary,
+    fontWeight: '700',
   },
 });

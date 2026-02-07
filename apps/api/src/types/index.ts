@@ -178,6 +178,10 @@ export interface PriceDaily {
   volume: number | null;
   market_cap: number | null;
   created_at: string;
+  /** KRX에서 가져온 종목명 (DB 저장 X, corp_master 시딩용) */
+  corp_name?: string;
+  /** 시장 구분 (DB 저장 X, corp_master 시딩용) */
+  market?: string;
 }
 
 // ============================================

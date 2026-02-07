@@ -4,15 +4,15 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  ActivityIndicator,
   TouchableOpacity,
   Linking,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
 import { getBandLabel } from '@onejellyinvest/shared';
 import { LabelBadge } from '../../components/LabelBadge';
-import { colors } from '../../lib/theme';
+import { colors, shadows } from '../../lib/theme';
 import type {
   ValuationView,
   ValuationHistoryEntry,
@@ -31,6 +31,70 @@ function formatDate(value: string): string {
   return d.toISOString().slice(0, 10);
 }
 
+function SkeletonBlock({ width, height }: { width: string | number; height: number }) {
+  const opacity = React.useRef(new Animated.Value(0.3)).current;
+
+  React.useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 0.7, duration: 800, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.3, duration: 800, useNativeDriver: true }),
+      ])
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [opacity]);
+
+  return (
+    <Animated.View
+      style={{
+        width: width as any,
+        height,
+        backgroundColor: colors.neuShadow,
+        borderRadius: 4,
+        marginBottom: 8,
+        opacity,
+      }}
+    />
+  );
+}
+
+function SkeletonDetail() {
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.content}>
+        {/* Header skeleton */}
+        <View style={styles.headerSection}>
+          <SkeletonBlock width="60%" height={22} />
+          <SkeletonBlock width="40%" height={14} />
+          <SkeletonBlock width="80%" height={14} />
+        </View>
+        {/* Metrics skeleton */}
+        <View style={styles.card}>
+          <SkeletonBlock width="40%" height={16} />
+          {[...Array(6)].map((_, i) => (
+            <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+              <SkeletonBlock width="30%" height={14} />
+              <SkeletonBlock width="20%" height={14} />
+              <SkeletonBlock width="25%" height={14} />
+            </View>
+          ))}
+        </View>
+        {/* Disclosures skeleton */}
+        <View style={styles.card}>
+          <SkeletonBlock width="30%" height={16} />
+          {[...Array(3)].map((_, i) => (
+            <View key={i} style={{ marginBottom: 8 }}>
+              <SkeletonBlock width="100%" height={14} />
+              <SkeletonBlock width="40%" height={10} />
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
 export default function CompanyDetailScreen() {
   const { corp_code } = useLocalSearchParams<{ corp_code: string }>();
 
@@ -40,7 +104,7 @@ export default function CompanyDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchData = () => {
     if (!corp_code) return;
 
     setLoading(true);
@@ -67,24 +131,25 @@ export default function CompanyDetailScreen() {
         );
       })
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchData();
   }, [corp_code]);
 
   if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>로딩 중...</Text>
-        </View>
-      </SafeAreaView>
-    );
+    return <SkeletonDetail />;
   }
 
   if (error) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.errorBanner}>
-          <Text style={styles.errorText}>{error}</Text>
+        <View style={styles.centered}>
+          <Text style={styles.errorIcon}>⚠</Text>
+          <Text style={styles.errorMessage}>{error}</Text>
+          <TouchableOpacity onPress={fetchData} style={styles.retryButton}>
+            <Text style={styles.retryText}>다시 시도</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -94,7 +159,8 @@ export default function CompanyDetailScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centered}>
-          <Text style={styles.emptyText}>데이터를 찾을 수 없습니다.</Text>
+          <Text style={styles.emptyIcon}>🔍</Text>
+          <Text style={styles.emptyText}>데이터를 찾을 수 없습니다</Text>
         </View>
       </SafeAreaView>
     );
@@ -208,10 +274,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 12,
-    color: colors.textSecondary,
+    padding: 24,
   },
   content: {
     padding: 16,
@@ -245,15 +308,13 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   card: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    borderRadius: 16,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+    ...shadows.glass,
   },
   sectionTitle: {
     fontSize: 16,
@@ -267,7 +328,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: 'rgba(255, 255, 255, 0.3)',
   },
   metricKey: {
     flex: 1,
@@ -277,7 +338,7 @@ const styles = StyleSheet.create({
   metricValue: {
     flex: 1,
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
     color: colors.text,
     textAlign: 'right',
   },
@@ -293,7 +354,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: 'rgba(255, 255, 255, 0.3)',
   },
   historyDate: {
     flex: 1,
@@ -303,7 +364,7 @@ const styles = StyleSheet.create({
   historyScore: {
     flex: 1,
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: '600',
     color: colors.text,
     textAlign: 'right',
   },
@@ -316,12 +377,13 @@ const styles = StyleSheet.create({
   disclosureRow: {
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: 'rgba(255, 255, 255, 0.3)',
   },
   disclosureTitle: {
     fontSize: 14,
     color: colors.primary,
     lineHeight: 20,
+    fontWeight: '500',
   },
   disclosureMeta: {
     flexDirection: 'row',
@@ -339,26 +401,46 @@ const styles = StyleSheet.create({
   disclaimer: {
     marginTop: 16,
     padding: 16,
-    backgroundColor: colors.card,
-    borderRadius: 12,
+    backgroundColor: colors.background,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.neuShadow,
   },
   disclaimerText: {
     fontSize: 11,
     color: colors.textSecondary,
     lineHeight: 16,
   },
-  errorBanner: {
-    backgroundColor: '#FEE2E2',
-    padding: 12,
-    margin: 16,
-    borderRadius: 8,
+  errorIcon: {
+    fontSize: 40,
+    marginBottom: 12,
   },
-  errorText: {
-    color: '#991B1B',
-    fontSize: 13,
+  errorMessage: {
+    color: colors.secondaryOrange,
+    fontSize: 15,
+    fontWeight: '500',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  retryButton: {
+    backgroundColor: colors.background,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 12,
+    ...shadows.neuRaised,
+  },
+  retryText: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  emptyIcon: {
+    fontSize: 40,
+    marginBottom: 12,
   },
   emptyText: {
     color: colors.textSecondary,
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: '500',
   },
 });

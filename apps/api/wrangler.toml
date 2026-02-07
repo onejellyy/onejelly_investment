@@ -43,10 +43,10 @@ binding = "DB"
 database_name = "onejellyinvest-prod"
 database_id = "c69bb620-8759-48c4-87ba-0bbc1b6604fa"
 
-# Cron Triggers (production만 사용 - 무료 플랜 5개 제한)
+# Cron Triggers (production만 사용)
 [env.production.triggers]
 crons = [
-  "*/5 * * * *",   # 공시 엔진: 5분마다
-  "0 7 * * *",     # 지표 엔진: 매일 16:00 KST (UTC 07:00)
-  "*/30 * * * *"   # 기사 엔진: 30분마다
+  "*/5 * * * *",   # 기사 엔진: 5분마다
+  "0 * * * *",     # 공시 엔진: 1시간마다 (매시 정각)
+  "0 7 * * *"      # 지표 엔진: 매일 16:00 KST (UTC 07:00)
 ]

@@ -8,11 +8,11 @@ interface FilingTypeChipProps {
 }
 
 export function FilingTypeChip({ type }: FilingTypeChipProps) {
-  const colors = disclosureCategoryColors[type];
+  const chipColors = disclosureCategoryColors[type];
   const text = disclosureCategoryTexts[type];
 
   // Fallback for safety if a new category is added and theme is not updated
-  if (!colors || !text) {
+  if (!chipColors || !text) {
     const fallbackColors = disclosureCategoryColors['기타'];
     return (
       <View style={[styles.chip, { backgroundColor: fallbackColors.bg }]}>
@@ -22,8 +22,8 @@ export function FilingTypeChip({ type }: FilingTypeChipProps) {
   }
 
   return (
-    <View style={[styles.chip, { backgroundColor: colors.bg }]}>
-      <Text style={[styles.text, { color: colors.text }]}>{text}</Text>
+    <View style={[styles.chip, { backgroundColor: chipColors.bg }]}>
+      <Text style={[styles.text, { color: chipColors.text }]}>{text}</Text>
     </View>
   );
 }
@@ -31,12 +31,11 @@ export function FilingTypeChip({ type }: FilingTypeChipProps) {
 const styles = StyleSheet.create({
   chip: {
     paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
+    paddingVertical: 3,
+    borderRadius: 10,
   },
   text: {
     fontSize: 11,
-    fontWeight: '500',
+    fontWeight: '600',
   },
 });
-

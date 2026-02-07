@@ -33,12 +33,16 @@ export async function runDisclosureBatch(
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : String(err);
 
-    await finishBatchLog(env.DB, batchId, {
-      status: 'failed',
-      items_processed: 0,
-      items_failed: 0,
-      error_message: errorMessage,
-    });
+    try {
+      await finishBatchLog(env.DB, batchId, {
+        status: 'failed',
+        items_processed: 0,
+        items_failed: 0,
+        error_message: errorMessage.slice(0, 500),
+      });
+    } catch (logErr) {
+      console.error('Failed to update batch log:', logErr);
+    }
 
     return {
       success: false,

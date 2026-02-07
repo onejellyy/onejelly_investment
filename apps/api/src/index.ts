@@ -62,8 +62,9 @@ app.get('/', (c) => {
   });
 });
 
-// 수동 배치 트리거 엔드포인트
+// 수동 배치 트리거 엔드포인트 (인증 필요)
 app.post('/api/batch/disclosure', async (c) => {
+  if (!verifyBatchAuth(c)) return c.json({ success: false, error: 'Unauthorized' }, 401);
   const result = await runDisclosureBatch(c.env);
   return c.json({ success: true, result, timestamp: new Date().toISOString() });
 });
@@ -205,14 +206,24 @@ app.post('/api/batch/seed', async (c) => {
 });
 
 app.post('/api/batch/news', async (c) => {
+  if (!verifyBatchAuth(c)) return c.json({ success: false, error: 'Unauthorized' }, 401);
   const result = await runNewsBatch(c.env);
   return c.json({ success: true, result, timestamp: new Date().toISOString() });
 });
 
 app.post('/api/batch/valuation', async (c) => {
+  if (!verifyBatchAuth(c)) return c.json({ success: false, error: 'Unauthorized' }, 401);
   const result = await runValuationBatch(c.env);
   return c.json({ success: true, result, timestamp: new Date().toISOString() });
 });
+
+// 배치 엔드포인트 인증 확인
+function verifyBatchAuth(c: { req: { header: (name: string) => string | undefined }; env: Env }): boolean {
+  const secret = c.env.INTERNAL_API_SECRET;
+  if (!secret) return true; // 시크릿 미설정 시 허용 (개발 환경)
+  const auth = c.req.header('x-api-secret') || c.req.header('authorization')?.replace('Bearer ', '');
+  return auth === secret;
+}
 
 // 404 핸들러
 app.notFound((c) => {
@@ -243,40 +254,37 @@ app.onError((err, c) => {
 export default {
   fetch: app.fetch,
 
-  /**
-   * Cron Trigger 핸들러
-   */
+  // Cron Trigger 핸들러
+  // event.cron으로 어떤 트리거인지 정확히 구분
+  // 기사: 5분마다 | 공시: 1시간마다 | 밸류에이션: 매일 16:00 KST
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
-    const cronTime = new Date(event.scheduledTime);
-    const hour = cronTime.getUTCHours();
-    const minute = cronTime.getUTCMinutes();
+    const cron = event.cron;
+    console.log(`Cron triggered: ${cron} at ${new Date(event.scheduledTime).toISOString()}`);
 
-    console.log(`Cron triggered at ${cronTime.toISOString()}`);
-
-    // 공시 엔진: 매 5분 (*/5)
-    if (minute % 5 === 0) {
+    // "*/5 * * * *" → 뉴스 (5분마다)
+    if (cron === '*/5 * * * *') {
       ctx.waitUntil(
-        runDisclosureBatch(env).then((result) => {
-          console.log('Disclosure batch result:', result);
-        })
+        runNewsBatch(env)
+          .then((r) => console.log('News batch:', JSON.stringify(r)))
+          .catch((e) => console.error('News batch error:', e))
       );
     }
 
-    // 기사 엔진: 매 30분 (*/30)
-    if (minute % 30 === 0) {
+    // "0 * * * *" → 공시 (1시간마다)
+    if (cron === '0 * * * *') {
       ctx.waitUntil(
-        runNewsBatch(env).then((result) => {
-          console.log('News batch result:', result);
-        })
+        runDisclosureBatch(env)
+          .then((r) => console.log('Disclosure batch:', JSON.stringify(r)))
+          .catch((e) => console.error('Disclosure batch error:', e))
       );
     }
 
-    // 지표 엔진: 매일 07:00 UTC (16:00 KST) - 장마감 후
-    if (hour === 7 && minute === 0) {
+    // "0 7 * * *" → 밸류에이션 (매일 16:00 KST)
+    if (cron === '0 7 * * *') {
       ctx.waitUntil(
-        runValuationBatch(env).then((result) => {
-          console.log('Valuation batch result:', result);
-        })
+        runValuationBatch(env)
+          .then((r) => console.log('Valuation batch:', JSON.stringify(r)))
+          .catch((e) => console.error('Valuation batch error:', e))
       );
     }
   },

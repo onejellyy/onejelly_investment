@@ -1,18 +1,69 @@
 import type { BandLabel, DisclosureCategory } from '@onejellyinvest/shared';
 import { BAND_LABELS } from '@onejellyinvest/shared';
+import { Platform } from 'react-native';
 
 export const colors = {
-  primary: '#3B82F6',
-  background: '#F9FAFB',
-  backgroundDark: '#111827',
+  primary: '#2A3F6D',
+  accent: '#4CAF50',
+  background: '#ECF0F3',
+  backgroundDark: '#1A1D2C',
   card: '#FFFFFF',
-  cardDark: '#1F2937',
-  text: '#111827',
-  textDark: '#F9FAFB',
-  textSecondary: '#6B7280',
+  cardDark: '#2C3141',
+  surface: '#ECF0F3',
+  surfaceDark: '#1A1D2C',
+  text: '#333333',
+  textDark: '#FFFFFF',
+  textSecondary: '#666666',
   textSecondaryDark: '#9CA3AF',
   border: '#E5E7EB',
   borderDark: '#374151',
+  secondaryOrange: '#FF9800',
+  secondaryPurple: '#673AB7',
+  // Neumorphism shadow colors (light)
+  neuLight: '#F9F9F9',
+  neuShadow: '#D1D9E6',
+  // Neumorphism shadow colors (dark)
+  neuLightDark: '#222639',
+  neuShadowDark: '#12141F',
+  // Glass
+  glassBorder: 'rgba(255, 255, 255, 0.3)',
+  glassBorderDark: 'rgba(255, 255, 255, 0.08)',
+};
+
+export const shadows = {
+  neuRaised: Platform.select({
+    ios: {
+      shadowColor: '#000',
+      shadowOffset: { width: 4, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 8,
+    },
+    android: {
+      elevation: 4,
+    },
+  }) as object,
+  neuRaisedSm: Platform.select({
+    ios: {
+      shadowColor: '#000',
+      shadowOffset: { width: 2, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    },
+    android: {
+      elevation: 2,
+    },
+  }) as object,
+  glass: Platform.select({
+    ios: {
+      shadowColor: '#1F2687',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.15,
+      shadowRadius: 16,
+    },
+    android: {
+      elevation: 6,
+    },
+  }) as object,
 };
 
 export const bandLabelColors: Record<BandLabel, { bg: string; text: string }> = {
@@ -42,4 +93,3 @@ export const disclosureCategoryTexts: Record<DisclosureCategory, string> = {
   '리스크': '리스크',
   '기타': '기타',
 };
-

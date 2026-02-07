@@ -11,15 +11,27 @@ export default function TabLayout() {
           tabBarActiveTintColor: colors.primary,
           tabBarInactiveTintColor: colors.textSecondary,
           tabBarStyle: {
-            backgroundColor: colors.card,
-            borderTopColor: colors.border,
+            backgroundColor: colors.background,
+            borderTopColor: colors.neuShadow,
+            borderTopWidth: 0,
+            elevation: 0,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: -2 },
+            shadowOpacity: 0.08,
+            shadowRadius: 8,
           },
           headerStyle: {
-            backgroundColor: colors.card,
+            backgroundColor: colors.background,
+            shadowColor: '#1F2687',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 12,
+            elevation: 4,
           },
-          headerTintColor: colors.text,
+          headerTintColor: colors.primary,
           headerTitleStyle: {
-            fontWeight: '600',
+            fontWeight: '700',
+            color: colors.primary,
           },
         }}
       >

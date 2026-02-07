@@ -26,6 +26,7 @@ interface KRXApiResponse {
 type PublicTableRow = string[];
 type PublicHeaderIndex = {
   stock_code?: number;
+  corp_name?: number;
   trade_date?: number;
   open_price?: number;
   high_price?: number;
@@ -69,6 +70,7 @@ function buildHeaderIndex(headers: string[]): PublicHeaderIndex {
   const headerIndex: PublicHeaderIndex = {};
   const aliases: Record<keyof PublicHeaderIndex, string[]> = {
     stock_code: ['종목코드', '단축코드', '코드', 'isusrtcd', 'isucd', '표준코드'],
+    corp_name: ['종목명', '종목', 'isunm', 'isu_nm'],
     trade_date: ['일자', '거래일', 'trddd', 'trdd', '기준일'],
     open_price: ['시가', '시가원', 'opnprc', 'tddopnprc'],
     high_price: ['고가', '고가원', 'hgprc', 'tddhgprc'],
@@ -237,6 +239,10 @@ export class PriceEngine {
       this.fetchPublicMarket(kosdaqUrl, date),
     ]);
 
+    // 시장 구분 태깅
+    for (const row of kospiRows) row.market = 'KOSPI';
+    for (const row of kosdaqRows) row.market = 'KOSDAQ';
+
     return [...kospiRows, ...kosdaqRows];
   }
 
@@ -337,6 +343,7 @@ export class PriceEngine {
       volume: parseNumber(row.ACC_TRDVOL),
       market_cap: parseNumber(row.MKTCAP),
       created_at: new Date().toISOString(),
+      corp_name: row.ISU_NM || undefined,
     };
   }
 
@@ -376,6 +383,10 @@ export class PriceEngine {
 
     if (closePrice === null) return null;
 
+    const corpName = headerIndex.corp_name !== undefined
+      ? row[headerIndex.corp_name]?.trim()
+      : undefined;
+
     return {
       id: `${stockCode}_${tradeDate}`,
       stock_code: stockCode,
@@ -387,6 +398,7 @@ export class PriceEngine {
       volume,
       market_cap: marketCap,
       created_at: new Date().toISOString(),
+      corp_name: corpName || undefined,
     };
   }
 
