@@ -9,7 +9,7 @@ export interface FeedItem {
   source: string;
   category: string | null;
   published_at: string;
-  summary: string | null;
+  preview_image_url: string | null;
   url: string;
   stock_code: string | null;
   corp_code: string | null;

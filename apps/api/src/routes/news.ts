@@ -2,7 +2,6 @@
  * 뉴스 API 라우트
  *
  * 읽기 전용, 뉴스 기사 목록 조회
- * 요약은 사실만 기술 (의견/전망 금지)
  */
 
 import { Hono } from 'hono';
@@ -22,9 +21,9 @@ newsRoutes.get('/', async (c) => {
   const offset = parseInt(c.req.query('offset') || '0');
 
   try {
-    let query = `SELECT url, source, title, published_at, one_liner, created_at
+    let query = `SELECT url, source, title, published_at, preview_image_url, category, created_at
                  FROM news_article
-                 WHERE 1=1`;
+                 WHERE category = 'economy'`;
     const bindings: (string | number)[] = [];
 
     if (source) {
@@ -38,7 +37,7 @@ newsRoutes.get('/', async (c) => {
     const result = await db.prepare(query).bind(...bindings).all<NewsArticleRow>();
 
     // 전체 개수
-    let countQuery = `SELECT COUNT(*) as total FROM news_article WHERE 1=1`;
+    let countQuery = `SELECT COUNT(*) as total FROM news_article WHERE category = 'economy'`;
     const countBindings: string[] = [];
 
     if (source) {
@@ -58,7 +57,7 @@ newsRoutes.get('/', async (c) => {
         limit,
         has_more: offset + limit < total,
       },
-      disclaimer: '본 정보는 사실 기반 요약이며, 투자 조언이 아닙니다.',
+      disclaimer: '본 정보는 투자 조언이 아니며, 투자 결정은 본인 책임입니다.',
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
@@ -86,7 +85,8 @@ newsRoutes.get('/sources', async (c) => {
       .prepare(
         `SELECT source, COUNT(*) as count
          FROM news_article
-         WHERE published_at >= datetime('now', '-1 day')
+         WHERE category = 'economy'
+           AND published_at >= datetime('now', '-1 day')
          GROUP BY source
          ORDER BY count DESC`
       )
@@ -115,6 +115,7 @@ interface NewsArticleRow {
   source: string;
   title: string;
   published_at: string;
-  one_liner: string | null;
+  preview_image_url: string | null;
+  category: string;
   created_at: string;
 }

@@ -61,7 +61,8 @@ export interface NewsArticle {
   source: string;
   title: string;
   published_at: string;
-  one_liner: string | null; // 사실 기반 한 줄 요약
+  preview_image_url: string | null;
+  category: 'economy';
   hash: string;
   created_at: string;
 }

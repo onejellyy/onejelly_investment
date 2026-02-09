@@ -84,6 +84,8 @@ export default function FeedScreen() {
   const [selectedType, setSelectedType] = useState<'all' | 'disclosure' | 'news'>('all');
   const [selectedCategory, setSelectedCategory] = useState<DisclosureCategory | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const hasActiveFilter = selectedType !== 'all' || selectedCategory !== null;
+  const activeFilterCount = (selectedType !== 'all' ? 1 : 0) + (selectedCategory ? 1 : 0);
 
   const fetchFeed = useCallback(async (cursor?: string, append = false) => {
     try {
@@ -134,22 +136,41 @@ export default function FeedScreen() {
     setSelectedCategory((prev: DisclosureCategory | null) => (prev === type ? null : type));
   };
 
+  const resetFilters = () => {
+    setSelectedType('all');
+    setSelectedCategory(null);
+  };
+
   const renderHeader = () => (
     <View style={styles.header}>
-      <Text style={styles.title}>최신 피드</Text>
-      <Text style={styles.subtitle}>공시와 뉴스의 최신 업데이트를 확인하세요</Text>
-
-      {/* Filter toggle */}
-      <View style={styles.filterToggle}>
-        <Text
-          style={styles.filterToggleText}
-          onPress={() => setShowFilters(!showFilters)}
-        >
-          {showFilters ? '필터 숨기기 ▲' : '필터 보기 ▼'}
-        </Text>
+      <View style={styles.heroCard}>
+        <Text style={styles.title}>최신 피드</Text>
+        <Text style={styles.subtitle}>공시와 뉴스의 최신 업데이트를 확인하세요</Text>
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryText}>
+            현재 {items.length}개 항목
+            {hasActiveFilter ? ` · 필터 ${activeFilterCount}개 적용` : ''}
+          </Text>
+          {hasActiveFilter && (
+            <TouchableOpacity onPress={resetFilters} style={styles.resetButton}>
+              <Text style={styles.resetButtonText}>필터 초기화</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
-      {/* Filters */}
+      <View style={styles.filterToggle}>
+        <TouchableOpacity
+          style={styles.filterToggleButton}
+          onPress={() => setShowFilters(!showFilters)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.filterToggleText}>
+            {showFilters ? '필터 숨기기 ▲' : '필터 보기 ▼'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       {showFilters && (
         <View style={styles.filters}>
           <Text style={styles.filterTitle}>타입</Text>
@@ -225,6 +246,11 @@ export default function FeedScreen() {
             <Text style={styles.emptyIcon}>📋</Text>
             <Text style={styles.emptyTitle}>표시할 항목이 없습니다</Text>
             <Text style={styles.emptySubtitle}>필터를 변경하거나 잠시 후 다시 확인해보세요</Text>
+            {hasActiveFilter && (
+              <TouchableOpacity onPress={resetFilters} style={styles.emptyResetButton}>
+                <Text style={styles.emptyResetButtonText}>필터 초기화</Text>
+              </TouchableOpacity>
+            )}
           </View>
         }
         contentContainerStyle={styles.list}
@@ -249,22 +275,67 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: 16,
+    paddingBottom: 28,
   },
   header: {
     marginBottom: 16,
   },
+  heroCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.48)',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    ...shadows.glass,
+  },
   title: {
-    fontSize: 24,
+    fontSize: 25,
     fontWeight: '700',
     color: colors.text,
     marginBottom: 4,
+    letterSpacing: 0.2,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: colors.textSecondary,
+  },
+  summaryRow: {
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  summaryText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    flex: 1,
+  },
+  resetButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.neuShadow,
+  },
+  resetButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.primary,
   },
   filterToggle: {
     marginTop: 12,
+    alignItems: 'flex-start',
+  },
+  filterToggleButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.55)',
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   filterToggleText: {
     fontSize: 13,
@@ -341,5 +412,19 @@ const styles = StyleSheet.create({
   emptySubtitle: {
     color: colors.textSecondary,
     fontSize: 13,
+  },
+  emptyResetButton: {
+    marginTop: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.neuShadow,
+  },
+  emptyResetButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.primary,
   },
 });

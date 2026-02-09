@@ -62,7 +62,8 @@ CREATE TABLE IF NOT EXISTS news_article (
     source TEXT NOT NULL,
     title TEXT NOT NULL,
     published_at TEXT NOT NULL,
-    one_liner TEXT,
+    preview_image_url TEXT,
+    category TEXT NOT NULL DEFAULT 'economy',
     hash TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -70,6 +71,7 @@ CREATE TABLE IF NOT EXISTS news_article (
 CREATE INDEX IF NOT EXISTS idx_news_published ON news_article(published_at DESC);
 CREATE INDEX IF NOT EXISTS idx_news_source ON news_article(source, published_at DESC);
 CREATE INDEX IF NOT EXISTS idx_news_created ON news_article(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_news_category ON news_article(category, published_at DESC);
 
 -- ============================================
 -- 5. 공시 테이블

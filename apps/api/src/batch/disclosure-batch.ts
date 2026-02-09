@@ -1,7 +1,7 @@
 /**
  * 공시 배치 작업
  *
- * 실행 주기: 5분마다
+ * 실행 주기: 1시간마다
  * 작업: OpenDART에서 새 공시 수집 및 분류
  */
 
@@ -12,11 +12,14 @@ export async function runDisclosureBatch(
   env: Env
 ): Promise<{ success: boolean; processed: number; errors: string[] }> {
   const startedAt = new Date().toISOString();
+  // Cron 트리거는 겹쳐 실행될 수 있고, 외부 API 지연으로 런타임이 길어질 수 있다.
+  // 너무 오래 걸리면 platform timeout으로 finish 로그가 남지 않으므로, 배치 자체에 시간 제한을 둔다.
+  const runtimeBudgetMs = 25_000;
   const batchId = await startBatchLog(env.DB, 'disclosure', startedAt);
 
   try {
     const engine = new DisclosureEngine(env);
-    const result = await engine.pollNewDisclosures();
+    const result = await engine.pollNewDisclosures({ runtimeBudgetMs });
 
     await finishBatchLog(env.DB, batchId, {
       status: result.errors.length > 0 ? 'partial' : 'success',
@@ -53,6 +56,22 @@ export async function runDisclosureBatch(
 }
 
 async function startBatchLog(db: D1Database, batchType: string, startedAt: string): Promise<number> {
+  // 이전 실행이 platform timeout 등으로 끝나지 못하고 running으로 남는 경우가 있어 정리한다.
+  // ISO 문자열은 사전순 비교가 가능하므로 started_at < cutoffIso로 안전하게 필터링한다.
+  const cutoffIso = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+  try {
+    await db
+      .prepare(
+        `UPDATE batch_log
+         SET finished_at = ?, status = 'failed', error_message = 'stale run: marked failed by next invocation'
+         WHERE batch_type = ? AND status = 'running' AND started_at < ?`
+      )
+      .bind(new Date().toISOString(), batchType, cutoffIso)
+      .run();
+  } catch (err) {
+    console.error('Failed to cleanup stale batch logs:', err);
+  }
+
   const result = await db
     .prepare(
       `INSERT INTO batch_log (batch_type, started_at, status, items_processed, items_failed)

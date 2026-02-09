@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, Image, Pressable } from 'react-native';
 import { DISCLOSURE_CATEGORIES } from '@onejellyinvest/shared';
 import type { DisclosureCategory } from '@onejellyinvest/shared';
 import { FilingTypeChip } from './FilingTypeChip';
@@ -23,50 +23,52 @@ export function FeedCard({ item }: FeedCardProps) {
   const date = new Date(item.published_at);
   const displayDate = Number.isNaN(date.getTime()) ? item.published_at : date.toISOString().slice(0, 10);
 
-  return (
+  const cardContent = (
     <View style={styles.card}>
-      {/* Header */}
       <View style={styles.header}>
         <View style={styles.badges}>
-          {item.type === 'disclosure' && isDisclosureCategory(item.category) && (
-            <FilingTypeChip type={item.category} />
-          )}
-          {item.type === 'news' && (
-            <Text style={styles.newsTag}>뉴스</Text>
-          )}
+          {item.type === 'disclosure' && isDisclosureCategory(item.category) && <FilingTypeChip type={item.category} />}
+          {item.type === 'news' && <Text style={styles.newsTag}>뉴스</Text>}
         </View>
         <Text style={styles.date}>{displayDate}</Text>
       </View>
 
-      {/* Company info */}
       <View style={styles.companyRow}>
         <Text style={styles.companyName}>{item.source}</Text>
-        {item.stock_code && (
-          <Text style={styles.stockCode}>({item.stock_code})</Text>
-        )}
+        {item.stock_code && <Text style={styles.stockCode}>({item.stock_code})</Text>}
       </View>
 
-      {/* Title */}
       <Text style={styles.title} numberOfLines={2}>
         {item.title}
       </Text>
 
-      {/* Summary */}
-      {item.summary && (
-        <Text style={styles.summary}>{item.summary}</Text>
+      {item.type === 'news' && item.preview_image_url && (
+        <Image source={{ uri: item.preview_image_url }} style={styles.thumbnail} resizeMode="cover" />
       )}
 
-      {/* Footer */}
-      <View style={styles.footer}>
-        <TouchableOpacity onPress={openSourceUrl}>
-          <Text style={styles.dartLink}>원문 보기 →</Text>
-        </TouchableOpacity>
-      </View>
+      {item.type === 'disclosure' && (
+        <View style={styles.footer}>
+          <TouchableOpacity onPress={openSourceUrl}>
+            <Text style={styles.dartLink}>원문 보기 →</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
+
+  if (item.type === 'news') {
+    return (
+      <Pressable onPress={openSourceUrl} style={styles.pressable} android_ripple={{ color: 'rgba(42, 63, 109, 0.08)' }}>
+        {cardContent}
+      </Pressable>
+    );
+  }
+
+  return cardContent;
 }
 
 const styles = StyleSheet.create({
+  pressable: {},
   card: {
     backgroundColor: 'rgba(255, 255, 255, 0.6)',
     borderRadius: 16,
@@ -117,14 +119,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: colors.text,
-    marginBottom: 8,
+    marginBottom: 10,
     lineHeight: 20,
   },
-  summary: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginBottom: 10,
-    lineHeight: 18,
+  thumbnail: {
+    width: '100%',
+    height: 170,
+    borderRadius: 12,
+    marginBottom: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.45)',
   },
   footer: {
     flexDirection: 'row',

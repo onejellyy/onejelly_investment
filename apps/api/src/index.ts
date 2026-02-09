@@ -153,33 +153,33 @@ app.post('/api/batch/seed', async (c) => {
   // 3. 샘플 뉴스 데이터
   const sampleNews = [
     {
-      url: 'https://news.example.com/2026020601', stock_code: '005930', corp_name: '삼성전자',
+      url: 'https://news.example.com/2026020601',
       title: '삼성전자, 4분기 실적 발표... 매출 75조원 기록',
-      one_liner: '삼성전자가 2025년 4분기 매출 75조원, 영업이익 6.5조원을 기록했다.',
+      preview_image_url: 'https://picsum.photos/seed/onejelly-news-1/800/450',
       source: '한국경제', published_at: '2026-02-06',
     },
     {
-      url: 'https://news.example.com/2026020501', stock_code: '000660', corp_name: 'SK하이닉스',
+      url: 'https://news.example.com/2026020501',
       title: 'SK하이닉스, HBM 수요 급증으로 실적 호조',
-      one_liner: 'SK하이닉스가 HBM 수요 증가에 힘입어 4분기 영업이익 7.2조원을 달성했다.',
+      preview_image_url: 'https://picsum.photos/seed/onejelly-news-2/800/450',
       source: '매일경제', published_at: '2026-02-05',
     },
     {
-      url: 'https://news.example.com/2026020401', stock_code: '373220', corp_name: 'LG에너지솔루션',
+      url: 'https://news.example.com/2026020401',
       title: 'LG에너지솔루션, 북미 완성차 업체와 5조원 규모 공급계약',
-      one_liner: 'LG에너지솔루션이 북미 완성차 업체와 5조원 규모의 배터리 공급계약을 체결했다.',
+      preview_image_url: 'https://picsum.photos/seed/onejelly-news-3/800/450',
       source: '조선비즈', published_at: '2026-02-04',
     },
     {
-      url: 'https://news.example.com/2026020301', stock_code: '005380', corp_name: '현대차',
+      url: 'https://news.example.com/2026020301',
       title: '현대차, 주당 8000원 배당 결정',
-      one_liner: '현대차가 주당 8000원의 현금배당을 결정했으며 배당수익률은 3.2%이다.',
+      preview_image_url: 'https://picsum.photos/seed/onejelly-news-4/800/450',
       source: '서울경제', published_at: '2026-02-03',
     },
     {
-      url: 'https://news.example.com/2026020201', stock_code: '035420', corp_name: 'NAVER',
+      url: 'https://news.example.com/2026020201',
       title: 'NAVER, AI 사업 확대 위해 5000억원 유상증자',
-      one_liner: 'NAVER가 AI 사업 투자를 위해 5000억원 규모의 유상증자를 결정했다.',
+      preview_image_url: 'https://picsum.photos/seed/onejelly-news-5/800/450',
       source: '한겨레', published_at: '2026-02-02',
     },
   ];
@@ -188,9 +188,9 @@ app.post('/api/batch/seed', async (c) => {
     try {
       await db.prepare(
         `INSERT OR IGNORE INTO news_article
-         (url, stock_code, corp_name, title, one_liner, source, published_at, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`
-      ).bind(n.url, n.stock_code, n.corp_name, n.title, n.one_liner, n.source, n.published_at).run();
+         (url, source, title, published_at, preview_image_url, category, hash, created_at)
+         VALUES (?, ?, ?, ?, ?, 'economy', ?, datetime('now'))`
+      ).bind(n.url, n.source, n.title, n.published_at, n.preview_image_url, `${n.url}-seed`).run();
       results.news++;
     } catch (e: any) {
       results.errors.push(`news ${n.url}: ${e.message}`);
@@ -256,7 +256,7 @@ export default {
 
   // Cron Trigger 핸들러
   // event.cron으로 어떤 트리거인지 정확히 구분
-  // 기사: 5분마다 | 공시: 1시간마다 | 밸류에이션: 매일 16:00 KST
+  // 기사: 5분마다 | 공시: 1시간마다 | 시세/지표: 매일 16:00 KST
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
     const cron = event.cron;
     console.log(`Cron triggered: ${cron} at ${new Date(event.scheduledTime).toISOString()}`);
@@ -279,12 +279,12 @@ export default {
       );
     }
 
-    // "0 7 * * *" → 밸류에이션 (매일 16:00 KST)
+    // "0 7 * * *" → 시세 수집 + 밸류에이션 (매일 16:00 KST)
     if (cron === '0 7 * * *') {
       ctx.waitUntil(
         runValuationBatch(env)
-          .then((r) => console.log('Valuation batch:', JSON.stringify(r)))
-          .catch((e) => console.error('Valuation batch error:', e))
+          .then((r) => console.log('Price/Valuation batch:', JSON.stringify(r)))
+          .catch((e) => console.error('Price/Valuation batch error:', e))
       );
     }
   },

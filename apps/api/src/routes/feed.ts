@@ -44,7 +44,7 @@ feedRoutes.get('/', async (c) => {
           source: d.corp_name,
           category: d.category,
           published_at: d.disclosed_at,
-          summary: null,
+          preview_image_url: null,
           url: d.source_url,
           stock_code: d.stock_code,
           corp_code: d.corp_code,
@@ -63,7 +63,7 @@ feedRoutes.get('/', async (c) => {
           source: n.source,
           category: null,
           published_at: n.published_at,
-          summary: n.one_liner,
+          preview_image_url: n.preview_image_url,
           url: n.url,
           stock_code: null,
           corp_code: null,
@@ -108,7 +108,7 @@ interface FeedItem {
   source: string;
   category: string | null;
   published_at: string;
-  summary: string | null;
+  preview_image_url: string | null;
   url: string;
   stock_code: string | null;
   corp_code: string | null;
@@ -130,7 +130,7 @@ interface NewsRow {
   source: string;
   title: string;
   published_at: string;
-  one_liner: string | null;
+  preview_image_url: string | null;
 }
 
 async function fetchDisclosures(
@@ -177,9 +177,9 @@ async function fetchNews(
   db: D1Database,
   options: { limit: number; cursor?: string }
 ): Promise<{ items: NewsRow[]; nextCursor: string | null }> {
-  let query = `SELECT url, source, title, published_at, one_liner
+  let query = `SELECT url, source, title, published_at, preview_image_url
                FROM news_article
-               WHERE 1=1`;
+               WHERE category = 'economy'`;
   const bindings: (string | number)[] = [];
 
   if (options.cursor) {

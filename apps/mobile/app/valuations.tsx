@@ -121,6 +121,7 @@ export default function ValuationsScreen() {
   const [error, setError] = useState<string | null>(null);
   const [offset, setOffset] = useState(0);
   const [selectedBand, setSelectedBand] = useState<BandLabel | null>(null);
+  const hasActiveFilter = selectedBand !== null;
 
   const fetchValuations = useCallback(
     async (newOffset: number, append = false) => {
@@ -175,10 +176,27 @@ export default function ValuationsScreen() {
     setSelectedBand(band);
   };
 
+  const resetFilter = () => {
+    setSelectedBand(null);
+  };
+
   const renderHeader = () => (
     <View style={styles.header}>
-      <Text style={styles.title}>밸류에이션</Text>
-      <Text style={styles.subtitle}>업종 대비 밸류에이션 지표를 확인하세요</Text>
+      <View style={styles.heroCard}>
+        <Text style={styles.title}>밸류에이션</Text>
+        <Text style={styles.subtitle}>업종 대비 밸류에이션 지표를 확인하세요</Text>
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryText}>
+            현재 {items.length} / 총 {total}개 종목
+            {hasActiveFilter ? ' · 필터 적용 중' : ''}
+          </Text>
+          {hasActiveFilter && (
+            <TouchableOpacity onPress={resetFilter} style={styles.resetButton}>
+              <Text style={styles.resetButtonText}>필터 초기화</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
 
       <ScrollView
         horizontal
@@ -195,8 +213,8 @@ export default function ValuationsScreen() {
         ))}
       </ScrollView>
 
-      {total > 0 && (
-        <Text style={styles.totalText}>총 {total}개 종목</Text>
+      {hasActiveFilter && (
+        <Text style={styles.totalText}>{selectedBand} 구간만 표시 중</Text>
       )}
     </View>
   );
@@ -246,6 +264,11 @@ export default function ValuationsScreen() {
             <Text style={styles.emptyIcon}>⚖️</Text>
             <Text style={styles.emptyTitle}>표시할 항목이 없습니다</Text>
             <Text style={styles.emptySubtitle}>필터를 변경하거나 잠시 후 다시 확인해보세요</Text>
+            {hasActiveFilter && (
+              <TouchableOpacity onPress={resetFilter} style={styles.emptyResetButton}>
+                <Text style={styles.emptyResetButtonText}>필터 초기화</Text>
+              </TouchableOpacity>
+            )}
           </View>
         }
         contentContainerStyle={styles.list}
@@ -270,20 +293,56 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: 16,
+    paddingBottom: 28,
   },
   header: {
     marginBottom: 16,
   },
+  heroCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.48)',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    ...shadows.glass,
+  },
   title: {
-    fontSize: 24,
+    fontSize: 25,
     fontWeight: '700',
     color: colors.text,
     marginBottom: 4,
+    letterSpacing: 0.2,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: colors.textSecondary,
     marginBottom: 12,
+  },
+  summaryRow: {
+    marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  summaryText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    flex: 1,
+  },
+  resetButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.neuShadow,
+  },
+  resetButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.primary,
   },
   filterRow: {
     flexDirection: 'row',
@@ -345,5 +404,19 @@ const styles = StyleSheet.create({
   emptySubtitle: {
     color: colors.textSecondary,
     fontSize: 13,
+  },
+  emptyResetButton: {
+    marginTop: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.neuShadow,
+  },
+  emptyResetButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.primary,
   },
 });

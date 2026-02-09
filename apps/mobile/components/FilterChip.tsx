@@ -32,9 +32,9 @@ const styles = StyleSheet.create({
     ...shadows.neuRaisedSm,
   },
   chipActive: {
-    backgroundColor: colors.background,
+    backgroundColor: 'rgba(42, 63, 109, 0.12)',
     borderWidth: 1,
-    borderColor: colors.neuShadow,
+    borderColor: 'rgba(42, 63, 109, 0.35)',
   },
   text: {
     fontSize: 13,

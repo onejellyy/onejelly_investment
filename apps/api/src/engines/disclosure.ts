@@ -161,16 +161,23 @@ export class OpenDartClient {
     }
   }
 
-  async getAllRecentDisclosures(days: number = 1): Promise<DartListItem[]> {
+  async getAllRecentDisclosures(
+    days: number = 1,
+    options?: { maxPages?: number }
+  ): Promise<DartListItem[]> {
     const endDate = this.formatDate(new Date());
     const startDate = this.formatDate(new Date(Date.now() - days * 24 * 60 * 60 * 1000));
-    return this.getDisclosuresForRange(startDate, endDate);
+    return this.getDisclosuresForRange(startDate, endDate, options);
   }
 
-  async getDisclosuresForRange(startDate: string, endDate: string): Promise<DartListItem[]> {
+  async getDisclosuresForRange(
+    startDate: string,
+    endDate: string,
+    options?: { maxPages?: number }
+  ): Promise<DartListItem[]> {
     const allItems: DartListItem[] = [];
     let pageNo = 1;
-    const maxPages = 10;
+    const maxPages = options?.maxPages ?? 10;
 
     while (pageNo <= maxPages) {
       const response = await this.getDisclosureList({
@@ -217,8 +224,11 @@ export class DisclosureEngine {
   /**
    * 새 공시 수집 및 저장
    */
-  async pollNewDisclosures(): Promise<{ processed: number; skipped: number; errors: string[] }> {
-    return this.pollDisclosuresForDateRange();
+  async pollNewDisclosures(options?: {
+    runtimeBudgetMs?: number;
+    maxPages?: number;
+  }): Promise<{ processed: number; skipped: number; errors: string[] }> {
+    return this.pollDisclosuresForDateRange(undefined, undefined, options);
   }
 
   /**
@@ -226,17 +236,29 @@ export class DisclosureEngine {
    */
   async pollDisclosuresForDateRange(
     startDate?: string,
-    endDate?: string
+    endDate?: string,
+    options?: {
+      runtimeBudgetMs?: number;
+      maxPages?: number;
+    }
   ): Promise<{ processed: number; skipped: number; errors: string[] }> {
     const result = { processed: 0, skipped: 0, errors: [] as string[] };
+    const startedAtMs = Date.now();
+    const runtimeBudgetMs = options?.runtimeBudgetMs ?? 25_000;
+    const maxPages = options?.maxPages ?? 3;
 
     try {
       const disclosures = startDate && endDate
         ? await this.dartClient.getDisclosuresForRange(startDate, endDate)
-        : await this.dartClient.getAllRecentDisclosures(1);
+        : await this.dartClient.getAllRecentDisclosures(1, { maxPages });
 
       for (const item of disclosures) {
         try {
+          if (Date.now() - startedAtMs > runtimeBudgetMs) {
+            result.errors.push('time_budget_exceeded: stopping early to avoid cron timeout');
+            break;
+          }
+
           // KRX만 처리 (Y=KOSPI, K=KOSDAQ, N=KONEX)
           if (!this.isKrxCorp(item.corp_cls)) {
             result.skipped++;

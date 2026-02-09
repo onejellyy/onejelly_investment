@@ -77,7 +77,8 @@ export interface NewsArticle {
   source: string;
   title: string;
   published_at: string;
-  one_liner: string | null;
+  preview_image_url: string | null;
+  category: 'economy';
   hash: string;
   created_at: string;
 }

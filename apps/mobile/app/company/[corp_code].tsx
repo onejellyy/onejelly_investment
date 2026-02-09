@@ -179,32 +179,36 @@ export default function CompanyDetailScreen() {
     { key: 'OPM (TTM)', value: valuation.metrics.opm_ttm.value, label: valuation.metrics.opm_ttm.label, suffix: '%' },
     { key: '부채비율', value: valuation.metrics.debt_ratio.value, label: valuation.metrics.debt_ratio.label, suffix: '%' },
   ];
+  const displaySnapDate = formatDate(valuation.snap_date);
 
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right']}>
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Company header */}
-        <View style={styles.headerSection}>
-          <View style={styles.headerRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.companyName}>{valuation.corp_name}</Text>
-              <Text style={styles.stockInfo}>
-                {valuation.stock_code} · {valuation.market}
-              </Text>
+        <View style={styles.headerCard}>
+          <View style={styles.headerSection}>
+            <View style={styles.headerRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.companyName}>{valuation.corp_name}</Text>
+                <Text style={styles.stockInfo}>
+                  {valuation.stock_code} · {valuation.market}
+                </Text>
+              </View>
+              <LabelBadge label={bandLabel} />
             </View>
-            <LabelBadge label={bandLabel} />
+            <Text style={styles.overallLabel}>{valuation.overall_label}</Text>
+            {valuation.peer_name && (
+              <Text style={styles.peerName}>업종: {valuation.peer_name}</Text>
+            )}
+            <View style={styles.snapshotPill}>
+              <Text style={styles.snapshotPillText}>기준일 {displaySnapDate}</Text>
+            </View>
           </View>
-          <Text style={styles.overallLabel}>{valuation.overall_label}</Text>
-          {valuation.peer_name && (
-            <Text style={styles.peerName}>업종: {valuation.peer_name}</Text>
-          )}
         </View>
 
-        {/* Metrics card */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>밸류에이션 지표</Text>
-          {metricsData.map((m) => (
-            <View key={m.key} style={styles.metricRow}>
+          {metricsData.map((m, idx) => (
+            <View key={m.key} style={[styles.metricRow, idx === metricsData.length - 1 && styles.rowLast]}>
               <Text style={styles.metricKey}>{m.key}</Text>
               <Text style={styles.metricValue}>
                 {formatMetric(m.value)}{m.suffix || ''}
@@ -214,13 +218,12 @@ export default function CompanyDetailScreen() {
           ))}
         </View>
 
-        {/* Score history */}
         {history.length > 0 && (
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>점수 추이 (최근 30일)</Text>
-            {history.map((h) => (
-              <View key={h.snap_date} style={styles.historyRow}>
-                <Text style={styles.historyDate}>{h.snap_date}</Text>
+            {history.map((h, idx) => (
+              <View key={h.snap_date} style={[styles.historyRow, idx === history.length - 1 && styles.rowLast]}>
+                <Text style={styles.historyDate}>{formatDate(h.snap_date)}</Text>
                 <Text style={styles.historyScore}>{h.valuation_score}</Text>
                 <Text style={styles.historyBand}>{h.band_label}</Text>
               </View>
@@ -228,15 +231,14 @@ export default function CompanyDetailScreen() {
           </View>
         )}
 
-        {/* Recent disclosures */}
         {disclosures.length > 0 && (
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>최근 공시</Text>
-            {disclosures.map((d) => (
+            {disclosures.map((d, idx) => (
               <TouchableOpacity
                 key={d.rcept_no}
                 onPress={() => Linking.openURL(d.source_url)}
-                style={styles.disclosureRow}
+                style={[styles.disclosureRow, idx === disclosures.length - 1 && styles.rowLast]}
               >
                 <Text style={styles.disclosureTitle} numberOfLines={2}>
                   {d.title}
@@ -247,12 +249,12 @@ export default function CompanyDetailScreen() {
                     {formatDate(d.disclosed_at)}
                   </Text>
                 </View>
+                <Text style={styles.disclosureAction}>원문 보기</Text>
               </TouchableOpacity>
             ))}
           </View>
         )}
 
-        {/* Disclaimer */}
         <View style={styles.disclaimer}>
           <Text style={styles.disclaimerText}>
             본 정보는 투자 조언을 목적으로 하지 않으며, 공시 및 재무 데이터를
@@ -278,9 +280,19 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+    paddingBottom: 28,
+  },
+  headerCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.48)',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+    marginBottom: 14,
+    ...shadows.glass,
   },
   headerSection: {
-    marginBottom: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
   },
   headerRow: {
     flexDirection: 'row',
@@ -307,6 +319,21 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: 4,
   },
+  snapshotPill: {
+    marginTop: 8,
+    alignSelf: 'flex-start',
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.neuShadow,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  snapshotPillText: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    fontWeight: '600',
+  },
   card: {
     backgroundColor: 'rgba(255, 255, 255, 0.6)',
     borderRadius: 16,
@@ -321,6 +348,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
     marginBottom: 12,
+  },
+  rowLast: {
+    borderBottomWidth: 0,
+    paddingBottom: 0,
   },
   metricRow: {
     flexDirection: 'row',
@@ -398,8 +429,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textSecondary,
   },
+  disclosureAction: {
+    marginTop: 6,
+    fontSize: 12,
+    color: colors.primary,
+    fontWeight: '600',
+  },
   disclaimer: {
-    marginTop: 16,
+    marginTop: 10,
     padding: 16,
     backgroundColor: colors.background,
     borderRadius: 16,
