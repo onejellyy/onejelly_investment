@@ -16,7 +16,8 @@ export async function runValuationBatch(
 
   try {
     const engine = new ValuationEngine(env);
-    const result = await engine.createDailySnapshots();
+    // valuation은 종목 수가 많아질 수 있어 시간 예산/최대 처리 건수를 둔다.
+    const result = await engine.createDailySnapshots({ runtimeBudgetMs: 25_000, maxCorps: 500 });
 
     await finishBatchLog(env.DB, batchId, {
       status: result.errors.length > 0 ? 'partial' : 'success',

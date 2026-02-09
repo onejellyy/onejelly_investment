@@ -133,3 +133,95 @@ healthRoutes.get('/stats', async (c) => {
     );
   }
 });
+
+/**
+ * GET /api/health/krx
+ * KRX OpenAPI 접근 가능 여부 확인 (키 유출 없이 상태만 반환)
+ *
+ * NOTE:
+ * - 실제 운영에서 시세 배치가 비는 가장 흔한 원인이 KRX OpenAPI 401이다.
+ * - Cloudflare Worker 환경에서 외부 네트워크/인증 문제가 있을 수 있어 별도 진단 엔드포인트를 둔다.
+ */
+healthRoutes.get('/krx', async (c) => {
+  const date = c.req.query('date') || new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const basDd = date.replace(/-/g, '');
+
+  const endpoints = [
+    {
+      name: 'KOSPI',
+      url: (c.env.KRX_KOSPI_API_URL || 'https://data-dbg.krx.co.kr/svc/apis/sto/stk_bydd_trd?basDd={date}').replace(
+        '{date}',
+        basDd
+      ),
+    },
+    {
+      name: 'KOSDAQ',
+      url: (c.env.KRX_KOSDAQ_API_URL || 'https://data-dbg.krx.co.kr/svc/apis/sto/ksq_bydd_trd?basDd={date}').replace(
+        '{date}',
+        basDd
+      ),
+    },
+  ];
+
+  async function probe(url: string, key?: string) {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'OneJellyInvest/1.0',
+        'Accept': 'application/json',
+        ...(key ? { AUTH_KEY: key } : {}),
+      },
+    });
+
+    let body: unknown = null;
+    try {
+      body = await response.clone().json();
+    } catch {
+      try {
+        body = await response.text();
+      } catch {
+        body = null;
+      }
+    }
+
+    return {
+      ok: response.ok,
+      status: response.status,
+      // 에러 메시지만 반환 (키/요청 상세는 절대 반환하지 않음)
+      respCode:
+        typeof body === 'object' && body && 'respCode' in body
+          ? (body as { respCode?: unknown }).respCode
+          : null,
+      respMsg:
+        typeof body === 'object' && body && 'respMsg' in body
+          ? (body as { respMsg?: unknown }).respMsg
+          : typeof body === 'string'
+            ? body.slice(0, 120)
+            : null,
+    };
+  }
+
+  try {
+    const key = c.env.KRX_API_KEY;
+    const results = await Promise.all(endpoints.map(async (e) => ({ name: e.name, url: e.url, ...(await probe(e.url, key)) })));
+
+    return c.json({
+      success: true,
+      data: {
+        date,
+        results,
+        source: c.env.KRX_SOURCE || null,
+        has_key: Boolean(key),
+      },
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    return c.json(
+      {
+        success: false,
+        error: err instanceof Error ? err.message : String(err),
+        timestamp: new Date().toISOString(),
+      },
+      500
+    );
+  }
+});

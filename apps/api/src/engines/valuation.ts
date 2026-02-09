@@ -65,8 +65,14 @@ export class ValuationEngine {
   /**
    * 일일 밸류에이션 스냅샷 생성 (메인 배치)
    */
-  async createDailySnapshots(): Promise<{ processed: number; errors: string[] }> {
+  async createDailySnapshots(options?: {
+    runtimeBudgetMs?: number;
+    maxCorps?: number;
+  }): Promise<{ processed: number; errors: string[] }> {
     const result = { processed: 0, errors: [] as string[] };
+    const startedAtMs = Date.now();
+    const runtimeBudgetMs = options?.runtimeBudgetMs ?? 25_000;
+    const maxCorps = options?.maxCorps ?? 500;
     const today = new Date().toISOString().slice(0, 10);
 
     // 이미 오늘 스냅샷 있으면 스킵
@@ -105,7 +111,11 @@ export class ValuationEngine {
       // 2. 각 기업별 스냅샷 생성
       const snapshots: ValuationSnapshot[] = [];
 
-      for (const corp of corps.results) {
+      for (const corp of corps.results.slice(0, maxCorps)) {
+        if (Date.now() - startedAtMs > runtimeBudgetMs) {
+          result.errors.push('time_budget_exceeded: stopping early to avoid cron timeout');
+          break;
+        }
         try {
           const snapshot = await this.createSnapshot(corp.corp_code, corp.stock_code, corp.peer_code, today);
           if (snapshot) {
@@ -266,12 +276,6 @@ export class ValuationEngine {
     peerCode: string | null,
     snapDate: string
   ): Promise<ValuationSnapshot | null> {
-    // TTM 재무 데이터 조회
-    const ttm = await this.db
-      .prepare('SELECT * FROM financial_ttm WHERE corp_code = ?')
-      .bind(corpCode)
-      .first<FinancialTTM>();
-
     // 최신 시세 조회
     const price = await this.db
       .prepare(
@@ -280,15 +284,25 @@ export class ValuationEngine {
       .bind(stockCode)
       .first<PriceDaily>();
 
-    if (!ttm || !price || !price.close_price) {
+    if (!price || !price.close_price) {
       return null;
     }
 
-    // 시가총액 계산
-    const marketCap = price.market_cap || (price.close_price * (ttm.shares_outstanding || 0));
+    // TTM 재무 데이터 조회 (없으면 "가격만 있는 스냅샷"으로 저장해 UI가 비지 않게 한다)
+    const ttm = await this.db
+      .prepare('SELECT * FROM financial_ttm WHERE corp_code = ?')
+      .bind(corpCode)
+      .first<FinancialTTM>();
 
-    // 지표 계산
-    const metrics = this.calculateMetrics(ttm, marketCap);
+    const marketCap = price.market_cap || null;
+    const metrics = ttm && marketCap !== null ? this.calculateMetrics(ttm, marketCap) : {
+      per_ttm: null,
+      pbr: null,
+      psr_ttm: null,
+      roe_ttm: null,
+      opm_ttm: null,
+      debt_ratio: null,
+    };
 
     const id = `${corpCode}_${snapDate}`;
 
