@@ -1,0 +1,17 @@
+## Local-only env vars for `wrangler dev`
+## Copy to `apps/api/.dev.vars` (DO NOT COMMIT) and fill values.
+
+ENVIRONMENT="development"
+
+# Secrets (never commit)
+OPENDART_API_KEY="REPLACE_ME"
+INTERNAL_API_SECRET="REPLACE_ME"
+KRX_API_KEY="REPLACE_ME"
+
+# Non-secret config defaults (usually keep as-is)
+KRX_SOURCE="api"
+KRX_PUBLIC_KOSPI_URL="https://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd?locale=ko_KR&mktId=STK&trdDd={date}&money=1&csvxls_isNo=false&name=fileDown&url=dbms/MDC/STAT/standard/MDCSTAT03901"
+KRX_PUBLIC_KOSDAQ_URL="https://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd?locale=ko_KR&mktId=KSQ&trdDd={date}&money=1&csvxls_isNo=false&name=fileDown&url=dbms/MDC/STAT/standard/MDCSTAT03901"
+KRX_KOSPI_API_URL="https://data-dbg.krx.co.kr/svc/apis/sto/stk_bydd_trd?basDd={date}"
+KRX_KOSDAQ_API_URL="https://data-dbg.krx.co.kr/svc/apis/sto/ksq_bydd_trd?basDd={date}"
+

@@ -6,12 +6,13 @@ account_id = "635e7cd89666c9e2bd86028a569f2f82"
 
 [vars]
 ENVIRONMENT = "development"
-OPENDART_API_KEY = "1076bf5f1a6e5072a33e11b2ff9a49061ee53e69"
-INTERNAL_API_SECRET = "onejellyinvest-internal-2026"
 KRX_SOURCE = "api"
-# NOTE: Do not commit API keys. Set via Worker secret instead:
+# NOTE: Do not commit secrets.
+# - Set via Worker secret:
+#   wrangler secret put OPENDART_API_KEY --env production
+#   wrangler secret put INTERNAL_API_SECRET --env production
 #   wrangler secret put KRX_API_KEY --env production
-# For local dev, use `.dev.vars` (untracked) or environment variable injection.
+# - For local dev, use `.dev.vars` (untracked) or environment variable injection.
 KRX_PUBLIC_KOSPI_URL = "https://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd?locale=ko_KR&mktId=STK&trdDd={date}&money=1&csvxls_isNo=false&name=fileDown&url=dbms/MDC/STAT/standard/MDCSTAT03901"
 KRX_PUBLIC_KOSDAQ_URL = "https://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd?locale=ko_KR&mktId=KSQ&trdDd={date}&money=1&csvxls_isNo=false&name=fileDown&url=dbms/MDC/STAT/standard/MDCSTAT03901"
 KRX_KOSPI_API_URL = "https://data-dbg.krx.co.kr/svc/apis/sto/stk_bydd_trd?basDd={date}"
@@ -31,11 +32,8 @@ binding = "AI"
 
 [env.production.vars]
 ENVIRONMENT = "production"
-OPENDART_API_KEY = "1076bf5f1a6e5072a33e11b2ff9a49061ee53e69"
-INTERNAL_API_SECRET = "onejellyinvest-internal-2026"
 KRX_SOURCE = "api"
-# NOTE: Set via Worker secret instead (not committed):
-#   wrangler secret put KRX_API_KEY --env production
+# NOTE: Secrets must be set via Worker secret (not committed).
 KRX_PUBLIC_KOSPI_URL = "https://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd?locale=ko_KR&mktId=STK&trdDd={date}&money=1&csvxls_isNo=false&name=fileDown&url=dbms/MDC/STAT/standard/MDCSTAT03901"
 KRX_PUBLIC_KOSDAQ_URL = "https://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd?locale=ko_KR&mktId=KSQ&trdDd={date}&money=1&csvxls_isNo=false&name=fileDown&url=dbms/MDC/STAT/standard/MDCSTAT03901"
 KRX_KOSPI_API_URL = "https://data-dbg.krx.co.kr/svc/apis/sto/stk_bydd_trd?basDd={date}"

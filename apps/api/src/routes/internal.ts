@@ -10,17 +10,17 @@ import type { Env } from '../types';
 
 export const internalRoutes = new Hono<{ Bindings: Env }>();
 
-// 간단한 시크릿 검증 (환경변수로 설정)
-const INTERNAL_SECRET = 'onejellyinvest-internal-2026';
-
 /**
  * 시크릿 검증 미들웨어
  */
 internalRoutes.use('*', async (c, next) => {
   const secret = c.req.header('X-Internal-Secret');
 
-  // 환경변수에서 시크릿 가져오기 (없으면 하드코딩된 값 사용)
-  const expectedSecret = c.env.INTERNAL_API_SECRET || INTERNAL_SECRET;
+  const expectedSecret = c.env.INTERNAL_API_SECRET;
+  if (!expectedSecret) {
+    // Misconfiguration; do not allow fallback in public repos.
+    return c.json({ success: false, error: 'Internal secret not configured' }, 500);
+  }
 
   if (secret !== expectedSecret) {
     return c.json({ success: false, error: 'Unauthorized' }, 401);

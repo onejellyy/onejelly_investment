@@ -74,15 +74,19 @@ pnpm --filter mobile start
 
 ### Worker (`apps/api/wrangler.toml` + Cloudflare Dashboard)
 
-- `OPENDART_API_KEY` (필수)
+- `OPENDART_API_KEY` (필수, Worker Secret로만 설정)
 - `ENVIRONMENT` (development/production)
 - `KRX_SOURCE` (`public` | `api`, 기본: API 키 있으면 api, 없으면 public)
 - `KRX_PUBLIC_KOSPI_URL` (공개 OTP URL, 예: `https://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd?locale=ko_KR&mktId=STK&trdDd={date}&money=1&csvxls_isNo=false&name=fileDown&url=dbms/MDC/STAT/standard/MDCSTAT03901`)
 - `KRX_PUBLIC_KOSDAQ_URL` (공개 OTP URL, 예: `https://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd?locale=ko_KR&mktId=KSQ&trdDd={date}&money=1&csvxls_isNo=false&name=fileDown&url=dbms/MDC/STAT/standard/MDCSTAT03901`)
 - `KRX_KOSPI_API_URL` (예: `http://data-dbg.krx.co.kr/svc/apis/sto/stk_bydd_trd?basDd={date}`)
 - `KRX_KOSDAQ_API_URL` (예: `http://data-dbg.krx.co.kr/svc/apis/sto/ksq_bydd_trd?basDd={date}`)
-- `KRX_API_KEY` (KRX OpenAPI 키, `KRX_SOURCE=api`일 때 필요)
+- `KRX_API_KEY` (KRX OpenAPI 키, `KRX_SOURCE=api`일 때 필요, Worker Secret)
 - `KRX_USE_MOCK` (로컬 개발용 Mock 시세 사용, 값: `1`)
+
+> IMPORTANT: 퍼블릭 레포에서는 `wrangler.toml` / 코드에 시크릿을 절대 커밋하지 않습니다.
+> - 로컬: `apps/api/.dev.vars` (gitignore) 사용 (`apps/api/.dev.vars.example` 참고)
+> - 운영: Cloudflare Worker Secrets 사용
 
 ### Web (`apps/web/.env.local`)
 
