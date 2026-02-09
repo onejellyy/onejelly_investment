@@ -5,6 +5,7 @@ declare interface Env {
   AI: Ai;
   ENVIRONMENT: string;
   OPENDART_API_KEY?: string;
+  OPENDART_API_KEY_V2?: string;
   OPENAI_API_KEY?: string;
   KRX_API_KEY?: string;
   KRX_KOSPI_API_URL?: string;
@@ -13,4 +14,6 @@ declare interface Env {
   KRX_PUBLIC_KOSPI_URL?: string;
   KRX_PUBLIC_KOSDAQ_URL?: string;
   KRX_USE_MOCK?: string;
+  INTERNAL_API_SECRET?: string;
+  INTERNAL_API_SECRET_V2?: string;
 }

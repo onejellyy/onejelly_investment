@@ -219,7 +219,7 @@ app.post('/api/batch/valuation', async (c) => {
 
 // 배치 엔드포인트 인증 확인
 function verifyBatchAuth(c: { req: { header: (name: string) => string | undefined }; env: Env }): boolean {
-  const secret = c.env.INTERNAL_API_SECRET;
+  const secret = c.env.INTERNAL_API_SECRET_V2 || c.env.INTERNAL_API_SECRET;
   if (!secret) return true; // 시크릿 미설정 시 허용 (개발 환경)
   const auth = c.req.header('x-api-secret') || c.req.header('authorization')?.replace('Bearer ', '');
   return auth === secret;

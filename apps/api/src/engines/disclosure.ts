@@ -215,10 +215,11 @@ export class DisclosureEngine {
 
   constructor(env: Env) {
     this.db = env.DB;
-    if (!env.OPENDART_API_KEY) {
+    const apiKey = env.OPENDART_API_KEY_V2 || env.OPENDART_API_KEY;
+    if (!apiKey) {
       throw new Error('OPENDART_API_KEY is required');
     }
-    this.dartClient = new OpenDartClient(env.OPENDART_API_KEY);
+    this.dartClient = new OpenDartClient(apiKey);
   }
 
   /**

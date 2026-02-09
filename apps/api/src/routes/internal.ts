@@ -16,7 +16,7 @@ export const internalRoutes = new Hono<{ Bindings: Env }>();
 internalRoutes.use('*', async (c, next) => {
   const secret = c.req.header('X-Internal-Secret');
 
-  const expectedSecret = c.env.INTERNAL_API_SECRET;
+  const expectedSecret = c.env.INTERNAL_API_SECRET_V2 || c.env.INTERNAL_API_SECRET;
   if (!expectedSecret) {
     // Misconfiguration; do not allow fallback in public repos.
     return c.json({ success: false, error: 'Internal secret not configured' }, 500);

@@ -87,6 +87,11 @@ pnpm --filter mobile start
 > IMPORTANT: 퍼블릭 레포에서는 `wrangler.toml` / 코드에 시크릿을 절대 커밋하지 않습니다.
 > - 로컬: `apps/api/.dev.vars` (gitignore) 사용 (`apps/api/.dev.vars.example` 참고)
 > - 운영: Cloudflare Worker Secrets 사용
+>
+> 운영 Secrets 예:
+> - `OPENDART_API_KEY` 또는 `OPENDART_API_KEY_V2`
+> - `INTERNAL_API_SECRET` 또는 `INTERNAL_API_SECRET_V2`
+> - `KRX_API_KEY`
 
 ### Web (`apps/web/.env.local`)
 
