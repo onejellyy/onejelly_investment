@@ -119,8 +119,10 @@ export class NewsEngine {
     this.ai = env.AI;
   }
 
-  async fetchNewArticles(): Promise<{ processed: number; skipped: number; errors: string[] }> {
+  async fetchNewArticles(options?: { runtimeBudgetMs?: number }): Promise<{ processed: number; skipped: number; errors: string[] }> {
     const result = { processed: 0, skipped: 0, errors: [] as string[] };
+    const startedAtMs = Date.now();
+    const runtimeBudgetMs = options?.runtimeBudgetMs ?? 25_000;
 
     for (const source of TRUSTED_SOURCES) {
       try {
@@ -128,7 +130,19 @@ export class NewsEngine {
 
         for (const article of articles) {
           try {
+            if (Date.now() - startedAtMs > runtimeBudgetMs) {
+              result.errors.push('time_budget_exceeded: stopping early to avoid cron timeout');
+              return result;
+            }
+
             if (await this.isDuplicate(article.url)) {
+              result.skipped++;
+              continue;
+            }
+
+            // 1차 빠른 필터: URL/제목 기반으로 명확히 비경제면 크롤 자체를 생략
+            const quickScore = this.calculateUrlHintScore(article.url) + this.calculateKeywordScore(article.title);
+            if (quickScore <= 0) {
               result.skipped++;
               continue;
             }
@@ -139,11 +153,7 @@ export class NewsEngine {
               continue;
             }
 
-            const judged = await this.classifyEconomyArticle({
-              url: article.url,
-              title: article.title,
-              content: crawled.content,
-            });
+            const judged = await this.classifyEconomyArticle({ url: article.url, title: article.title, content: crawled.content });
 
             if (!judged.isEconomy) {
               result.skipped++;

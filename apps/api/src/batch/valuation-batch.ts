@@ -53,6 +53,20 @@ export async function runValuationBatch(
 }
 
 async function startBatchLog(db: D1Database, batchType: string, startedAt: string): Promise<number> {
+  const cutoffIso = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+  try {
+    await db
+      .prepare(
+        `UPDATE batch_log
+         SET finished_at = ?, status = 'failed', error_message = 'stale run: marked failed by next invocation'
+         WHERE batch_type = ? AND status = 'running' AND started_at < ?`
+      )
+      .bind(new Date().toISOString(), batchType, cutoffIso)
+      .run();
+  } catch (err) {
+    console.error('Failed to cleanup stale batch logs:', err);
+  }
+
   const result = await db
     .prepare(
       `INSERT INTO batch_log (batch_type, started_at, status, items_processed, items_failed)

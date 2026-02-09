@@ -1,7 +1,7 @@
 /**
  * 기사 배치 작업
  *
- * 실행 주기: 30분마다
+ * 실행 주기: 5분마다
  * 작업: 신뢰 언론사에서 경제 기사 수집/필터링/저장
  */
 
@@ -12,11 +12,13 @@ export async function runNewsBatch(
   env: Env
 ): Promise<{ success: boolean; processed: number; errors: string[] }> {
   const startedAt = new Date().toISOString();
+  // 크론 런타임이 길어지면 finish 로그가 남지 않고 running이 누적될 수 있어 시간 예산을 둔다.
+  const runtimeBudgetMs = 25_000;
   const batchId = await startBatchLog(env.DB, 'news', startedAt);
 
   try {
     const engine = new NewsEngine(env);
-    const result = await engine.fetchNewArticles();
+    const result = await engine.fetchNewArticles({ runtimeBudgetMs });
 
     await finishBatchLog(env.DB, batchId, {
       status: result.errors.length > 0 ? 'partial' : 'success',
@@ -53,6 +55,21 @@ export async function runNewsBatch(
 }
 
 async function startBatchLog(db: D1Database, batchType: string, startedAt: string): Promise<number> {
+  // 이전 실행이 timeout 등으로 running으로 남아있는 경우 정리
+  const cutoffIso = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+  try {
+    await db
+      .prepare(
+        `UPDATE batch_log
+         SET finished_at = ?, status = 'failed', error_message = 'stale run: marked failed by next invocation'
+         WHERE batch_type = ? AND status = 'running' AND started_at < ?`
+      )
+      .bind(new Date().toISOString(), batchType, cutoffIso)
+      .run();
+  } catch (err) {
+    console.error('Failed to cleanup stale batch logs:', err);
+  }
+
   const result = await db
     .prepare(
       `INSERT INTO batch_log (batch_type, started_at, status, items_processed, items_failed)
