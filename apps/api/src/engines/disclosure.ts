@@ -271,6 +271,10 @@ export class DisclosureEngine {
             continue;
           }
 
+          // FK 제약(disclosure.corp_code -> corp_master.corp_code) 때문에
+          // 공시 저장 전에 corp_master를 최소 정보로 시딩한다.
+          await this.ensureCorpMaster(item);
+
           // 분류 및 저장
           const disclosure = this.convertToDisclosure(item);
           await this.saveDisclosure(disclosure);
@@ -289,6 +293,21 @@ export class DisclosureEngine {
     }
 
     return result;
+  }
+
+  private async ensureCorpMaster(item: DartListItem): Promise<void> {
+    try {
+      await this.db
+        .prepare(
+          `INSERT OR IGNORE INTO corp_master (corp_code, stock_code, corp_name, updated_at)
+           VALUES (?, ?, ?, datetime('now'))`
+        )
+        .bind(item.corp_code, item.stock_code || null, item.corp_name)
+        .run();
+    } catch (err) {
+      // 시딩 실패하더라도 공시 저장이 실패할 수 있으므로, 상위에서 에러를 기록하도록 던진다.
+      throw err;
+    }
   }
 
   /**
