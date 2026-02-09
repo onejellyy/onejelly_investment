@@ -56,7 +56,8 @@ export async function runNewsBatch(
 
 async function startBatchLog(db: D1Database, batchType: string, startedAt: string): Promise<number> {
   // 이전 실행이 timeout 등으로 running으로 남아있는 경우 정리
-  const cutoffIso = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+  // 뉴스는 5분 크론이므로 10분 이상 running이면 stale로 간주한다.
+  const cutoffIso = new Date(Date.now() - 10 * 60 * 1000).toISOString();
   try {
     await db
       .prepare(

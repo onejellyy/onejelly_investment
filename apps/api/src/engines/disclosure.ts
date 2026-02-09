@@ -474,10 +474,14 @@ export class DisclosureEngine {
   }
 
   /**
-   * YYYYMMDD → ISO 날짜 변환
+   * YYYYMMDD → ISO datetime 변환
+   *
+   * DART 리스트 API는 접수 "일자"만 제공한다.
+   * 피드에서 같은 날 기사(타임스탬프 있음)에 묻히지 않도록 KST 기준 "하루의 끝"으로 고정한다.
    */
   private formatIsoDate(yyyymmdd: string): string {
-    return `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6, 8)}`;
+    const dateOnly = `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6, 8)}`;
+    return new Date(`${dateOnly}T23:59:59.999+09:00`).toISOString();
   }
 
   /**

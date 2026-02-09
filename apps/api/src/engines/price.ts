@@ -158,6 +158,40 @@ export class PriceEngine {
     this.env = env;
   }
 
+  private async getKrxSessionCookie(): Promise<string | null> {
+    // KRX 공개 데이터는 OTP/다운로드 요청에 세션 쿠키가 필요할 때가 있다.
+    // (쿠키가 없으면 OTP가 "LOGOUT"이거나 다운로드가 빈 파일로 내려오는 케이스가 있음)
+    try {
+      const res = await fetch(DEFAULT_REFERER, {
+        method: 'GET',
+        headers: {
+          'User-Agent': 'OneJellyInvest/1.0',
+          'Accept': 'text/html,*/*',
+        },
+      });
+
+      const headersAny = res.headers as unknown as { getSetCookie?: () => string[] };
+      const setCookies = headersAny.getSetCookie?.() || [];
+
+      // Cloudflare Workers는 getSetCookie()를 지원한다. (표준 fetch는 단일 set-cookie만 노출)
+      const raw = setCookies.length > 0
+        ? setCookies
+        : (res.headers.get('set-cookie') ? [res.headers.get('set-cookie') as string] : []);
+
+      const pairs = raw
+        .map((value) => value.split(';')[0]?.trim())
+        .filter((value): value is string => Boolean(value));
+
+      if (pairs.length === 0) return null;
+
+      // 중복 제거 후 Cookie 헤더 값으로 조합
+      const uniquePairs = Array.from(new Set(pairs));
+      return uniquePairs.join('; ');
+    } catch {
+      return null;
+    }
+  }
+
   /**
    * 날짜 기준 전체 시세 조회
    *
@@ -263,6 +297,8 @@ export class PriceEngine {
       otpPayload.trdDd = date.replace(/-/g, '');
     }
 
+    const cookie = await this.getKrxSessionCookie();
+
     const otpResponse = await fetch(url.origin + url.pathname, {
       method: 'POST',
       headers: {
@@ -270,6 +306,7 @@ export class PriceEngine {
         'Accept': 'text/plain,*/*',
         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
         'Referer': DEFAULT_REFERER,
+        ...(cookie ? { 'Cookie': cookie } : {}),
       },
       body: new URLSearchParams(otpPayload),
     });
@@ -279,8 +316,8 @@ export class PriceEngine {
     }
 
     const otp = (await otpResponse.text()).trim();
-    if (!otp) {
-      throw new Error('KRX OTP response empty');
+    if (!otp || otp === 'LOGOUT') {
+      throw new Error(`KRX OTP response invalid: ${otp || '(empty)'}`);
     }
 
     const downloadUrl = `${url.origin}/comm/fileDn/download_csv/download.cmd`;
@@ -291,6 +328,7 @@ export class PriceEngine {
         'Accept': 'text/csv, application/vnd.ms-excel, */*',
         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
         'Referer': DEFAULT_REFERER,
+        ...(cookie ? { 'Cookie': cookie } : {}),
       },
       body: new URLSearchParams({ code: otp }),
     });
@@ -300,6 +338,9 @@ export class PriceEngine {
     }
 
     const buffer = await downloadResponse.arrayBuffer();
+    if (buffer.byteLength === 0) {
+      throw new Error('KRX download returned empty body');
+    }
     const text = decodeKrxCsv(buffer);
     const table = parseCsv(text);
 

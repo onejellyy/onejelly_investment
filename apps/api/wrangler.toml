@@ -14,8 +14,8 @@ KRX_SOURCE = "api"
 # For local dev, use `.dev.vars` (untracked) or environment variable injection.
 KRX_PUBLIC_KOSPI_URL = "https://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd?locale=ko_KR&mktId=STK&trdDd={date}&money=1&csvxls_isNo=false&name=fileDown&url=dbms/MDC/STAT/standard/MDCSTAT03901"
 KRX_PUBLIC_KOSDAQ_URL = "https://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd?locale=ko_KR&mktId=KSQ&trdDd={date}&money=1&csvxls_isNo=false&name=fileDown&url=dbms/MDC/STAT/standard/MDCSTAT03901"
-# KRX_KOSPI_API_URL = "http://data-dbg.krx.co.kr/svc/apis/sto/stk_bydd_trd?basDd={date}"
-# KRX_KOSDAQ_API_URL = "http://data-dbg.krx.co.kr/svc/apis/sto/ksq_bydd_trd?basDd={date}"
+KRX_KOSPI_API_URL = "https://data-dbg.krx.co.kr/svc/apis/sto/stk_bydd_trd?basDd={date}"
+KRX_KOSDAQ_API_URL = "https://data-dbg.krx.co.kr/svc/apis/sto/ksq_bydd_trd?basDd={date}"
 # KRX_USE_MOCK = "1"
 
 [[d1_databases]]
@@ -38,6 +38,8 @@ KRX_SOURCE = "api"
 #   wrangler secret put KRX_API_KEY --env production
 KRX_PUBLIC_KOSPI_URL = "https://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd?locale=ko_KR&mktId=STK&trdDd={date}&money=1&csvxls_isNo=false&name=fileDown&url=dbms/MDC/STAT/standard/MDCSTAT03901"
 KRX_PUBLIC_KOSDAQ_URL = "https://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd?locale=ko_KR&mktId=KSQ&trdDd={date}&money=1&csvxls_isNo=false&name=fileDown&url=dbms/MDC/STAT/standard/MDCSTAT03901"
+KRX_KOSPI_API_URL = "https://data-dbg.krx.co.kr/svc/apis/sto/stk_bydd_trd?basDd={date}"
+KRX_KOSDAQ_API_URL = "https://data-dbg.krx.co.kr/svc/apis/sto/ksq_bydd_trd?basDd={date}"
 
 [env.production.ai]
 binding = "AI"
@@ -52,5 +54,5 @@ database_id = "c69bb620-8759-48c4-87ba-0bbc1b6604fa"
 crons = [
   "*/5 * * * *",   # 기사 엔진: 5분마다
   "0 * * * *",     # 공시 엔진: 1시간마다 (매시 정각)
-  "0 7 * * *"      # 시세/지표 엔진: 매일 16:00 KST (UTC 07:00)
+  "0 19 * * *"     # 시세/지표 엔진: 매일 04:00 KST (UTC 19:00)
 ]

@@ -58,7 +58,8 @@ export async function runDisclosureBatch(
 async function startBatchLog(db: D1Database, batchType: string, startedAt: string): Promise<number> {
   // 이전 실행이 platform timeout 등으로 끝나지 못하고 running으로 남는 경우가 있어 정리한다.
   // ISO 문자열은 사전순 비교가 가능하므로 started_at < cutoffIso로 안전하게 필터링한다.
-  const cutoffIso = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+  // 공시는 1시간 크론이지만 실제 실행은 수십초 수준이라 15분 이상 running이면 stale로 간주한다.
+  const cutoffIso = new Date(Date.now() - 15 * 60 * 1000).toISOString();
   try {
     await db
       .prepare(
